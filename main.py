@@ -1,27 +1,32 @@
-import tkinter as ttk
-from views.login import LoginView
+import customtkinter as ctk
+from views.login import LoginView  # Make sure LoginView inherits from ctk.CTkFrame
 
 if __name__ == "__main__":
-    root = ttk.Tk()
+    ctk.set_appearance_mode("light")  # "dark" also works if you want dark mode
+    ctk.set_default_color_theme("green")  # Change the primary color theme
+
+    root = ctk.CTk()
     root.title("AgroPedidos")
 
-    # Tamaño de la ventana
-    ancho_ventana = 800
-    alto_ventana = 600
+    # White background
+    root.configure(fg_color="white")
 
-    # Obtener tamaño de pantalla
-    ancho_pantalla = root.winfo_screenwidth()
-    alto_pantalla = root.winfo_screenheight()
+    # Set the window icon (optional)
+    root.iconbitmap("./resources/images/favicon.ico")
 
-    # Calcular posición x, y para centrar la ventana
-    x = (ancho_pantalla // 2) - (ancho_ventana // 2)
-    y = (alto_pantalla // 2) - (alto_ventana // 2)
+    # Desired window size
+    window_width = 800
+    window_height = 700
 
-    # Posicionar y dar tamaño a la ventana
-    root.geometry(f"{ancho_ventana}x{alto_ventana}+{x}+{y}")
+    # Center window
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
+    x = (screen_width // 2) - (window_width // 2)
+    y = (screen_height // 2) - (window_height // 2)
+    root.geometry(f"{window_width}x{window_height}+{x}+{y}")
 
-    # Iniciar vista
+    # Load main view
     app = LoginView(master=root)
-    app.pack(fill=ttk.BOTH, expand=True)
+    app.pack(fill="both", expand=True)
 
     root.mainloop()

@@ -1,52 +1,66 @@
-from tkinter import ttk
+from PIL import Image
+import customtkinter as ctk
 
-class LoginView(ttk.Frame):
-    def __init__(self, master=None):
+class LoginView(ctk.CTkFrame):
+    def __init__(self, master):
         super().__init__(master)
         self.master = master
-        self.configure(style="Main.TFrame")
+        self.configure(fg_color="#f3fdf2")  # Fondo general
+        self.pack(fill="both", expand=True)
         self.create_widgets()
-        self.init_styles()
-
-    def init_styles(self):
-        style = ttk.Style()
-        style.theme_use("clam")
-        style.configure("TButton", font=("Arial", 12), padding=4)
-        style.configure("TEntry", font=("Arial", 12), padding=4)
-        style.configure("TFrame", background="#f0f0f0")
 
     def create_widgets(self):
-        # Etiqueta de título
-        self.title_label = ttk.Label(self, text="Iniciar Sesión", font=("Arial", 24))
-        self.title_label.pack(pady=20)
+        self.master.title("Iniciar Sesión")
+        self.master.geometry("800x700")
 
-        # Campo de entrada para el nombre de usuario
-        self.username_label = ttk.Label(self, text="Nombre de Usuario:")
-        self.username_label.pack(pady=5)
-        self.username_entry = ttk.Entry(self)
-        self.username_entry.pack(pady=5)
+        image_path = "./resources/images/logo.png"  # Cambia a tu ruta real
+        img = Image.open(image_path)
+        resized_img = ctk.CTkImage(dark_image=img, light_image=img, size=(100, 100))
 
-        # Campo de entrada para la contraseña
-        self.password_label = ttk.Label(self, text="Contraseña:")
-        self.password_label.pack(pady=5)
-        self.password_entry = ttk.Entry(self, show='*')
-        self.password_entry.pack(pady=5)
+        # Contenedor principal centrado, tamaño adaptable
+        wrapper = ctk.CTkFrame(self, fg_color="#ffffff", corner_radius=15)
+        wrapper.place(relx=0.5, rely=0.5, anchor="center", relwidth=0.8)
 
-        # Botón de inicio de sesión
-        self.login_button = ttk.Button(self, text="Iniciar Sesión", command=self.login)
-        self.login_button.pack(pady=20)
+        # Subcontenedor con padding interno, que se adapta al contenido
+        padded_content = ctk.CTkFrame(wrapper, fg_color="transparent")
+        padded_content.pack(padx=40, pady=40, fill="both")
 
-        # Botón de registro
-        self.register_button = ttk.Button(self, text="Registrarse", command=self.register)
-        self.register_button.pack(pady=5)
-        # Botón de salir
-        self.exit_button = ttk.Button(self, text="Salir", command=self.master.quit)
-        self.exit_button.pack(pady=5)
+        # Logo
+        logo = ctk.CTkLabel(padded_content, image=resized_img, text="")
+        logo.pack(pady=(0, 20))
+
+        # Título
+        title = ctk.CTkLabel(padded_content, text="Iniciar Sesión", text_color="#1a8341", font=("Segoe UI", 24, "bold"))
+        title.pack(pady=(0, 20), fill="x")
+
+        # Usuario
+        user_label = ctk.CTkLabel(padded_content, text="Usuario", text_color="#1a8341", font=("Segoe UI", 16, "bold"), anchor="w")
+        user_label.pack(pady=(0, 5), fill="x")
+        self.user_entry = ctk.CTkEntry(padded_content, placeholder_text="Usuario", height=50, corner_radius=10, width=300,font=("Segoe UI", 16))
+        self.user_entry.pack(pady=10, fill="x", expand=True)
+
+        # Contraseña
+        pass_label = ctk.CTkLabel(padded_content, text="Contraseña", text_color="#1a8341", font=("Segoe UI", 16, "bold"), anchor="w")
+        pass_label.pack(pady=(0, 5), fill="x")
+        self.pass_entry = ctk.CTkEntry(padded_content, placeholder_text="Contraseña", show="*", height=50, corner_radius=10, width=300,font=("Segoe UI", 16))
+        self.pass_entry.pack(pady=10, fill="x", expand=True)
+
+        # Botón Iniciar Sesión
+        login_btn = ctk.CTkButton(padded_content, text="Iniciar Sesión", height=50, corner_radius=10, width=300, command=self.login, font=("Segoe UI", 16, "bold"))
+        login_btn.pack(pady=10, fill="x", expand=True)
+
+        # Botón Registrarse
+        register_btn = ctk.CTkButton(padded_content, text="Registrarse", height=50, corner_radius=10,
+                                     fg_color="gray", hover_color="darkgray", width=300, command=self.register, font=("Segoe UI", 16, "bold"))
+        register_btn.pack(pady=5, fill="x", expand=True)
+
+        # Botón Salir
+        exit_btn = ctk.CTkButton(padded_content, text="Salir", height=50, corner_radius=10,
+                                 fg_color="red", hover_color="darkred", width=300, command=self.master.quit, font=("Segoe UI", 16, "bold"))
+        exit_btn.pack(pady=5, fill="x", expand=True)
+
     def login(self):
-        username = self.username_entry.get()
-        password = self.password_entry.get()
-        # Aquí iría la lógica de autenticación
-        print(f"Intentando iniciar sesión con {username} y {password}")
+        print(f"Iniciar sesión con usuario: {self.user_entry.get()}")
 
     def register(self):
-        print("Abrir ventana de registro")
+        print("Abrir registro...")

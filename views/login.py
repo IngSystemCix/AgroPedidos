@@ -1,11 +1,13 @@
 from PIL import Image
 import customtkinter as ctk
+from services.auth_service import authenticate
+from views.product_catalog import ProductCatalogView
 
 class LoginView(ctk.CTkFrame):
     def __init__(self, master):
         super().__init__(master)
         self.master = master
-        self.configure(fg_color="#f3fdf2")  # Fondo general
+        self.configure(fg_color="#f3fdf2")
         self.pack(fill="both", expand=True)
         self.create_widgets()
 
@@ -13,54 +15,123 @@ class LoginView(ctk.CTkFrame):
         self.master.title("Iniciar Sesión")
         self.master.geometry("800x700")
 
-        image_path = "./resources/images/logo.png"  # Cambia a tu ruta real
+        image_path = "./resources/images/logo.png"
         img = Image.open(image_path)
         resized_img = ctk.CTkImage(dark_image=img, light_image=img, size=(100, 100))
 
-        # Contenedor principal centrado, tamaño adaptable
         wrapper = ctk.CTkFrame(self, fg_color="#ffffff", corner_radius=15)
         wrapper.place(relx=0.5, rely=0.5, anchor="center", relwidth=0.8)
 
-        # Subcontenedor con padding interno, que se adapta al contenido
         padded_content = ctk.CTkFrame(wrapper, fg_color="transparent")
         padded_content.pack(padx=40, pady=40, fill="both")
 
-        # Logo
         logo = ctk.CTkLabel(padded_content, image=resized_img, text="")
         logo.pack(pady=(0, 20))
 
-        # Título
-        title = ctk.CTkLabel(padded_content, text="Iniciar Sesión", text_color="#1a8341", font=("Segoe UI", 24, "bold"))
+        title = ctk.CTkLabel(
+            padded_content,
+            text="Iniciar Sesión",
+            text_color="#1a8341",
+            font=("Segoe UI", 24, "bold"),
+        )
         title.pack(pady=(0, 20), fill="x")
 
-        # Usuario
-        user_label = ctk.CTkLabel(padded_content, text="Usuario", text_color="#1a8341", font=("Segoe UI", 16, "bold"), anchor="w")
+        # Entrada de usuario
+        user_label = ctk.CTkLabel(
+            padded_content,
+            text="Usuario",
+            text_color="#1a8341",
+            font=("Segoe UI", 16, "bold"),
+            anchor="w",
+        )
         user_label.pack(pady=(0, 5), fill="x")
-        self.user_entry = ctk.CTkEntry(padded_content, placeholder_text="Usuario", height=50, corner_radius=10, width=300,font=("Segoe UI", 16))
+        self.user_entry = ctk.CTkEntry(
+            padded_content,
+            placeholder_text="Usuario",
+            height=50,
+            corner_radius=10,
+            width=300,
+            font=("Segoe UI", 16),
+        )
         self.user_entry.pack(pady=10, fill="x", expand=True)
 
-        # Contraseña
-        pass_label = ctk.CTkLabel(padded_content, text="Contraseña", text_color="#1a8341", font=("Segoe UI", 16, "bold"), anchor="w")
+        # Entrada de contraseña
+        pass_label = ctk.CTkLabel(
+            padded_content,
+            text="Contraseña",
+            text_color="#1a8341",
+            font=("Segoe UI", 16, "bold"),
+            anchor="w",
+        )
         pass_label.pack(pady=(0, 5), fill="x")
-        self.pass_entry = ctk.CTkEntry(padded_content, placeholder_text="Contraseña", show="*", height=50, corner_radius=10, width=300,font=("Segoe UI", 16))
+        self.pass_entry = ctk.CTkEntry(
+            padded_content,
+            placeholder_text="Contraseña",
+            show="*",
+            height=50,
+            corner_radius=10,
+            width=300,
+            font=("Segoe UI", 16),
+        )
         self.pass_entry.pack(pady=10, fill="x", expand=True)
 
         # Botón Iniciar Sesión
-        login_btn = ctk.CTkButton(padded_content, text="Iniciar Sesión", height=50, corner_radius=10, width=300, command=self.login, font=("Segoe UI", 16, "bold"))
+        login_btn = ctk.CTkButton(
+            padded_content,
+            text="Iniciar Sesión",
+            height=50,
+            corner_radius=10,
+            width=300,
+            command=self.login,
+            font=("Segoe UI", 16, "bold"),
+        )
         login_btn.pack(pady=10, fill="x", expand=True)
 
         # Botón Registrarse
-        register_btn = ctk.CTkButton(padded_content, text="Registrarse", height=50, corner_radius=10,
-                                     fg_color="gray", hover_color="darkgray", width=300, command=self.register, font=("Segoe UI", 16, "bold"))
+        register_btn = ctk.CTkButton(
+            padded_content,
+            text="Registrarse",
+            height=50,
+            corner_radius=10,
+            fg_color="gray",
+            hover_color="darkgray",
+            width=300,
+            command=self.register,
+            font=("Segoe UI", 16, "bold"),
+        )
         register_btn.pack(pady=5, fill="x", expand=True)
 
         # Botón Salir
-        exit_btn = ctk.CTkButton(padded_content, text="Salir", height=50, corner_radius=10,
-                                 fg_color="red", hover_color="darkred", width=300, command=self.master.quit, font=("Segoe UI", 16, "bold"))
+        exit_btn = ctk.CTkButton(
+            padded_content,
+            text="Salir",
+            height=50,
+            corner_radius=10,
+            fg_color="red",
+            hover_color="darkred",
+            width=300,
+            command=self.master.quit,
+            font=("Segoe UI", 16, "bold"),
+        )
         exit_btn.pack(pady=5, fill="x", expand=True)
 
     def login(self):
-        print(f"Iniciar sesión con usuario: {self.user_entry.get()}")
+        username = self.user_entry.get()
+        password = self.pass_entry.get()
 
-    def register(self):
-        print("Abrir registro...")
+        user = authenticate(username, password)
+        if user:
+            print(f"✅ Usuario autenticado: {user.username} ({user.rol})")
+            self.destroy()
+
+            if user.rol.value == "Cliente":
+                from views.product_catalog import ProductCatalogView
+                view = ProductCatalogView(master=self.master, usuario=user)
+            else:
+                import customtkinter as ctk
+                view = ctk.CTkFrame(master=self.master)
+                ctk.CTkLabel(view, text="Vista de administrador en construcción.", font=("Arial", 20)).pack(padx=20, pady=20)
+
+            view.pack(fill="both", expand=True)
+        else:
+            ctk.CTkLabel(self, text="❌ Credenciales inválidas", text_color="red", font=("Segoe UI", 14, "bold")).pack(pady=10)

@@ -1,12 +1,16 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey
-from datetime import datetime
+from sqlalchemy import Column, Integer, ForeignKey, DateTime, Enum, Text
 from config.connection import Base
+import enum
+
+class NotificationStatusEnum(enum.Enum):
+    S = "S"
+    E = "E"
+    P = "P"
 
 class Notification(Base):
-    __tablename__ = "notification"
-
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    order_id = Column(Integer, ForeignKey("order.id"), nullable=False)
-    message = Column(Text, nullable=False)
-    status = Column(String(1), default="P")  # S: Success, E: Error, P: Pending
-    created_at = Column(DateTime, default=datetime.now)
+    __tablename__ = "Notification"
+    id = Column(Integer, primary_key=True, index=True)
+    order_id = Column(Integer, ForeignKey("Order.id"))
+    message = Column(Text)
+    status = Column(Enum(NotificationStatusEnum))
+    sent_at = Column(DateTime)

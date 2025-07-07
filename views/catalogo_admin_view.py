@@ -32,7 +32,7 @@ class CatalogoAdminView(ctk.CTkFrame):
         ctk.CTkLabel(user_section, text="👨‍💼", font=("Segoe UI", 18)).pack(side="left")
         ctk.CTkLabel(user_section, text="Administrador", font=("Segoe UI", 14)).pack(side="left", padx=5)
         ctk.CTkLabel(user_section, text=self.usuario.username, font=("Segoe UI", 14, "bold")).pack(side="left", padx=5)
-        ctk.CTkButton(user_section, text="Cerrar sesión", width=100, fg_color="#ff4d4d", hover_color="#cc0000", command=self.cerrar_sesion).pack(side="left", padx=10)
+        ctk.CTkButton(user_section, text="Cerrar sesión", width=100, fg_color="#ff4d4d", hover_color="#cc0000", command=self.navigate_logout).pack(side="left", padx=10)
 
         # NAVIGATION
         nav_frame = ctk.CTkFrame(self, fg_color="#f3fdf2")
@@ -58,30 +58,23 @@ class CatalogoAdminView(ctk.CTkFrame):
 
         self.products_frame.bind("<Configure>", lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
         self.canvas.bind("<Configure>", lambda e: self.canvas.itemconfig(self.products_window, width=e.width))
+        self.canvas.bind_all("<MouseWheel>", lambda event: self.canvas.yview_scroll(-int(event.delta / 120), "units"))
 
-        self.current_columns = None
         self.load_products()
 
-    def load_products(self, columns=None):
+    def load_products(self, columns=5):
         for widget in self.products_frame.winfo_children():
             widget.destroy()
 
-        if columns is None:
-            columns = self.current_columns or 4
+        products = get_all_products()
 
-        for index, product in enumerate(get_all_products()):
+        for i in range(columns):
+            self.products_frame.grid_columnconfigure(i, weight=1)
+
+        for index, product in enumerate(products):
             row = index // columns
             col = index % columns
             self.create_product_card(product, row, col)
-
-    def on_resize(self, event):
-        width = self.products_frame.winfo_width()
-        card_width = 170 + 30
-        columns = max(1, width // card_width)
-
-        if columns != self.current_columns:
-            self.current_columns = columns
-            self.load_products(columns)
 
     def create_product_card(self, product, row, col):
         card = ctk.CTkFrame(self.products_frame, corner_radius=12, fg_color="#ffffff", width=170, height=270)
@@ -108,28 +101,5 @@ class CatalogoAdminView(ctk.CTkFrame):
             pass
         return None
 
-    def cerrar_sesion(self):
-        self.master.destroy()
-        import sys
-        import os
-        sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-        import customtkinter as ctk
-        from views.login import LoginView
-
-        root = ctk.CTk()
-        root.title("AgroPedidos")
-        root.configure(fg_color="white")
-        root.iconbitmap("./resources/images/favicon.ico")
-
-        window_width = 800
-        window_height = 700
-        screen_width = root.winfo_screenwidth()
-        screen_height = root.winfo_screenheight()
-        x = (screen_width // 2) - (window_width // 2)
-        y = (screen_height // 2) - (window_height // 2)
-        root.geometry(f"{window_width}x{window_height}+{x}+{y}")
-
-        app = LoginView(master=root)
-        app.pack(fill="both", expand=True)
-
-        root.mainloop()
+    def navigate_logout(self):
+        self.navigate("logout")

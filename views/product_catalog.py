@@ -7,13 +7,12 @@ from datetime import datetime
 import re
 from functools import partial
 
-
-
 class ProductCatalogView(ctk.CTkFrame):
-    def __init__(self, master, usuario):
+    def __init__(self, master, usuario, navigate):
         super().__init__(master)
         self.master = master
         self.usuario = usuario
+        self.navigate = navigate
 
         self.configure(fg_color="#f3fdf2")
         self.pack(fill="both", expand=True)
@@ -41,28 +40,26 @@ class ProductCatalogView(ctk.CTkFrame):
             text_color="#1a8341",
         ).pack(side="left", padx=10)
 
-        # Usuario
-        user_icon = ctk.CTkLabel(header, text="👤", font=("Segoe UI", 18))
-        user_icon.pack(side="right", padx=10)
-        ctk.CTkLabel(header, text=self.usuario.username, font=("Segoe UI", 16)).pack(
-            side="right", padx=(0, 10)
-        )
+        # Usuario y botón cerrar sesión
+        user_section = ctk.CTkFrame(header, fg_color="transparent")
+        user_section.pack(side="right", padx=20)
+        ctk.CTkLabel(user_section, text="👤", font=("Segoe UI", 18)).pack(side="left", padx=5)
+        ctk.CTkLabel(user_section, text=self.usuario.username, font=("Segoe UI", 16)).pack(side="left", padx=5)
+        ctk.CTkButton(user_section, text="Cerrar sesión", width=120, fg_color="#ff4d4d", hover_color="#cc0000", command=lambda: self.navigate("logout")).pack(side="left", padx=5)
 
         # ---------------- BUSCADOR ----------------
         search_frame = ctk.CTkFrame(self, fg_color="#f3fdf2")
         search_frame.pack(pady=10)
 
-        # Entrada de búsqueda
         self.search_entry = ctk.CTkEntry(
             search_frame, placeholder_text="Buscar producto...", width=400, height=40
         )
         self.search_entry.pack(side="left", padx=(10, 0), pady=5)
         self.search_entry.bind("<Return>", lambda event: self.perform_search())
 
-        # Botón de búsqueda con ícono
         self.search_button = ctk.CTkButton(
             search_frame,
-            text="🔍",  # o usa una imagen si tienes
+            text="🔍",
             width=50,
             height=40,
             font=("Segoe UI", 18),
@@ -70,19 +67,15 @@ class ProductCatalogView(ctk.CTkFrame):
         )
         self.search_button.pack(side="left", padx=10, pady=5)
 
-        # ---------------- CARDS DE PRODUCTOS ----------------
-        # Scroll vertical
         canvas_frame = ctk.CTkFrame(self, fg_color="#f3fdf2")
         canvas_frame.pack(fill="both", expand=True, pady=10)
 
         canvas = ctk.CTkCanvas(canvas_frame, bg="#f3fdf2", highlightthickness=0)
         canvas.pack(side="left", fill="both", expand=True)
 
-        # Bind del scroll con la rueda del mouse
         def _on_mousewheel(event):
             canvas.yview_scroll(-int(event.delta / 120), "units")
 
-        # Bind del scroll (Windows y Mac)
         canvas.bind_all("<MouseWheel>", _on_mousewheel)
 
         scrollbar = ctk.CTkScrollbar(
@@ -92,25 +85,26 @@ class ProductCatalogView(ctk.CTkFrame):
 
         canvas.configure(yscrollcommand=scrollbar.set)
 
-        # Frame que contiene los productos en grid
         self.products_frame = ctk.CTkFrame(canvas, fg_color="#f3fdf2")
         self.products_window = canvas.create_window(
             (0, 0), window=self.products_frame, anchor="nw"
         )
 
-        # Ajustar scroll al contenido
         self.products_frame.bind(
             "<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
         )
 
         self.products_frame.bind("<Configure>", self.on_resize)
-        self.current_columns = None  # Para evitar renders innecesarios
+        self.current_columns = None
         self.load_products()
 
         def on_canvas_resize(event):
             canvas.itemconfig(self.products_window, width=event.width)
 
         canvas.bind("<Configure>", on_canvas_resize)
+
+    # El resto del código queda igual
+
 
     def load_products(self, columns=None):
         for widget in self.products_frame.winfo_children():

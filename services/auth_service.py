@@ -7,7 +7,7 @@ from utils.security import hash_password, verify_password
 def get_usuario_by_username(db: Session, username: str):
     return db.query(Usuario).filter(Usuario.username == username).first()
 
-# Crear usuario (admin o cliente)
+# Crear usuario nuevo (Admin o Cliente)
 def create_usuario(username: str, password: str, rol: str = "Cliente"):
     db = SessionLocal()
     try:
@@ -15,14 +15,15 @@ def create_usuario(username: str, password: str, rol: str = "Cliente"):
         if existing:
             raise Exception("El usuario ya existe")
 
-        usuario = Usuario(
+        nuevo_usuario = Usuario(
             username=username,
             password=hash_password(password),
-            rol=rol
+            rol=rol  # <- como string: "Administrador" o "Cliente"
         )
-        db.add(usuario)
+        db.add(nuevo_usuario)
         db.commit()
-        return usuario
+        db.refresh(nuevo_usuario)
+        return nuevo_usuario
     finally:
         db.close()
 
@@ -32,7 +33,7 @@ def authenticate(username: str, password: str):
     try:
         user = get_usuario_by_username(db, username)
         if user and verify_password(password, user.password):
-            return user  # Retorna el objeto Usuario completo
+            return user  # ← Devuelve el objeto Usuario completo
         return None
     finally:
         db.close()

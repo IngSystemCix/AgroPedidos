@@ -1,15 +1,14 @@
 from PIL import Image
 import customtkinter as ctk
 from services.auth_service import authenticate
-from views.product_catalog import ProductCatalogView
-from views.admin_main import AdminMainApp
 
 class LoginView(ctk.CTkFrame):
-    def __init__(self, master):
+    def __init__(self, master, on_login_success=None):
         super().__init__(master)
         self.master = master
+        self.on_login_success = on_login_success
         self.configure(fg_color="#f3fdf2")
-        self.pack(fill="both", expand=True)
+        self.login_message = None
         self.create_widgets()
 
     def create_widgets(self):
@@ -63,18 +62,11 @@ class LoginView(ctk.CTkFrame):
 
         if user:
             print(f"✅ Usuario autenticado: {user.username} ({user.rol})")
-            self.destroy()
-
-            if user.rol == "Cliente":
-                view = ProductCatalogView(master=self.master, usuario=user, logout_callback=self.logout)
-            else:
-                view = AdminMainApp(master=self.master, usuario=user, logout_callback=self.logout)
-
-            view.pack(fill="both", expand=True)
+            if self.on_login_success:
+                self.on_login_success(user)
+            self.destroy()  # Destruye el LoginView tras login exitoso
         else:
-            ctk.CTkLabel(self, text="❌ Credenciales inválidas", text_color="red", font=("Segoe UI", 14, "bold")).pack(pady=10)
-
-    def logout(self):
-        for widget in self.master.winfo_children():
-            widget.destroy()
-        LoginView(master=self.master).pack(fill="both", expand=True)
+            if self.login_message:
+                self.login_message.destroy()
+            self.login_message = ctk.CTkLabel(self, text="❌ Credenciales inválidas", text_color="red", font=("Segoe UI", 14, "bold"))
+            self.login_message.pack(pady=10)

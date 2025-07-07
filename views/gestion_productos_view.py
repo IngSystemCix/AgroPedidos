@@ -34,7 +34,14 @@ class GestionProductosView(ctk.CTkFrame):
         ctk.CTkLabel(user_section, text="👨‍💼", font=("Segoe UI", 18)).pack(side="left")
         ctk.CTkLabel(user_section, text="Administrador", font=("Segoe UI", 14)).pack(side="left", padx=5)
         ctk.CTkLabel(user_section, text=self.usuario.username, font=("Segoe UI", 14, "bold")).pack(side="left", padx=5)
-        ctk.CTkButton(user_section, text="Cerrar sesión", width=100, fg_color="#ff4d4d", hover_color="#cc0000").pack(side="left", padx=10)
+        ctk.CTkButton(
+            user_section,
+            text="Cerrar sesión",
+            width=100,
+            fg_color="#ff4d4d",
+            hover_color="#cc0000",
+            command=self.navigate_logout
+        ).pack(side="left", padx=10)
 
         # -------- NAVEGACIÓN --------
         nav_frame = ctk.CTkFrame(self, fg_color="#f3fdf2")
@@ -100,7 +107,7 @@ class GestionProductosView(ctk.CTkFrame):
 
     def manejar_click_accion(self, event):
         item_id = self.tree.identify_row(event.y)
-        col = self.tree.identify_column(event.x)  # '#1' = ID, '#7' = Editar, '#8' = Eliminar
+        col = self.tree.identify_column(event.x)
 
         if not item_id or col not in ("#6", "#7"):
             return
@@ -142,3 +149,6 @@ class GestionProductosView(ctk.CTkFrame):
 
     def recargar_productos(self):
         self.cargar_datos()
+
+    def navigate_logout(self):
+        self.navigate("logout")

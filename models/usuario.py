@@ -1,14 +1,15 @@
-from sqlalchemy import Column, Integer, String, Enum
-from config.connection import Base
-import enum
+from sqlalchemy import Column, Integer, String
+from sqlalchemy.ext.declarative import declarative_base
 
-class RolEnum(enum.Enum):
-    Cliente = "Cliente"
-    Administrador = "Administrador"
+Base = declarative_base()
 
 class Usuario(Base):
-    __tablename__ = "Usuario"
-    id = Column(Integer, primary_key=True, index=True)
+    __tablename__ = 'usuario'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(String(50), unique=True, nullable=False)
     password = Column(String(255), nullable=False)
-    rol = Column(Enum(RolEnum), nullable=False)
+    rol = Column(String(20), nullable=False)  # ← Rol como string: 'Cliente' o 'Administrador'
+
+    def __repr__(self):
+        return f"<Usuario(id={self.id}, username='{self.username}', rol='{self.rol}')>"

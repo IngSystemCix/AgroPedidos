@@ -1,6 +1,7 @@
 from PIL import Image
 import customtkinter as ctk
 from services.auth_service import authenticate
+from views.register_view import RegisterView  # 👈 Nuevo import
 
 class LoginView(ctk.CTkFrame):
     def __init__(self, master, on_login_success=None):
@@ -38,22 +39,30 @@ class LoginView(ctk.CTkFrame):
 
         user_label = ctk.CTkLabel(padded_content, text="Usuario", text_color="#1a8341", font=("Segoe UI", 16, "bold"), anchor="w")
         user_label.pack(pady=(0, 5), fill="x")
+
         self.user_entry = ctk.CTkEntry(padded_content, placeholder_text="Usuario", height=50, corner_radius=10, width=300, font=("Segoe UI", 16))
         self.user_entry.pack(pady=10, fill="x", expand=True)
+        self.user_entry.bind("<Return>", lambda event: self.pass_entry.focus_set())
 
         pass_label = ctk.CTkLabel(padded_content, text="Contraseña", text_color="#1a8341", font=("Segoe UI", 16, "bold"), anchor="w")
         pass_label.pack(pady=(0, 5), fill="x")
+
         self.pass_entry = ctk.CTkEntry(padded_content, placeholder_text="Contraseña", show="*", height=50, corner_radius=10, width=300, font=("Segoe UI", 16))
         self.pass_entry.pack(pady=10, fill="x", expand=True)
+        self.pass_entry.bind("<Return>", lambda event: self.login())
 
         login_btn = ctk.CTkButton(padded_content, text="Iniciar Sesión", height=50, corner_radius=10, width=300, command=self.login, font=("Segoe UI", 16, "bold"))
         login_btn.pack(pady=10, fill="x", expand=True)
 
-        register_btn = ctk.CTkButton(padded_content, text="Registrarse", height=50, corner_radius=10, fg_color="gray", hover_color="darkgray", width=300, font=("Segoe UI", 16, "bold"))
+        register_btn = ctk.CTkButton(padded_content, text="Registrarse", height=50, corner_radius=10, fg_color="gray", hover_color="darkgray", width=300,
+                                     font=("Segoe UI", 16, "bold"), command=self.open_register_view)
         register_btn.pack(pady=5, fill="x", expand=True)
 
-        exit_btn = ctk.CTkButton(padded_content, text="Salir", height=50, corner_radius=10, fg_color="red", hover_color="darkred", width=300, command=self.master.quit, font=("Segoe UI", 16, "bold"))
+        exit_btn = ctk.CTkButton(padded_content, text="Salir", height=50, corner_radius=10, fg_color="red", hover_color="darkred", width=300,
+                                 command=self.master.quit, font=("Segoe UI", 16, "bold"))
         exit_btn.pack(pady=5, fill="x", expand=True)
+
+        self.user_entry.focus_set()
 
     def login(self):
         username = self.user_entry.get()
@@ -64,9 +73,12 @@ class LoginView(ctk.CTkFrame):
             print(f"✅ Usuario autenticado: {user.username} ({user.rol})")
             if self.on_login_success:
                 self.on_login_success(user)
-            self.destroy()  # Destruye el LoginView tras login exitoso
+            self.destroy()
         else:
             if self.login_message:
                 self.login_message.destroy()
             self.login_message = ctk.CTkLabel(self, text="❌ Credenciales inválidas", text_color="red", font=("Segoe UI", 14, "bold"))
             self.login_message.pack(pady=10)
+
+    def open_register_view(self):
+        RegisterView(self)

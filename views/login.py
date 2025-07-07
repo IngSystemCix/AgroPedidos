@@ -2,6 +2,7 @@ from PIL import Image
 import customtkinter as ctk
 from services.auth_service import authenticate
 from views.product_catalog import ProductCatalogView
+from views.admin_main import AdminMainApp
 
 class LoginView(ctk.CTkFrame):
     def __init__(self, master):
@@ -36,102 +37,44 @@ class LoginView(ctk.CTkFrame):
         )
         title.pack(pady=(0, 20), fill="x")
 
-        # Entrada de usuario
-        user_label = ctk.CTkLabel(
-            padded_content,
-            text="Usuario",
-            text_color="#1a8341",
-            font=("Segoe UI", 16, "bold"),
-            anchor="w",
-        )
+        user_label = ctk.CTkLabel(padded_content, text="Usuario", text_color="#1a8341", font=("Segoe UI", 16, "bold"), anchor="w")
         user_label.pack(pady=(0, 5), fill="x")
-        self.user_entry = ctk.CTkEntry(
-            padded_content,
-            placeholder_text="Usuario",
-            height=50,
-            corner_radius=10,
-            width=300,
-            font=("Segoe UI", 16),
-        )
+        self.user_entry = ctk.CTkEntry(padded_content, placeholder_text="Usuario", height=50, corner_radius=10, width=300, font=("Segoe UI", 16))
         self.user_entry.pack(pady=10, fill="x", expand=True)
 
-        # Entrada de contraseña
-        pass_label = ctk.CTkLabel(
-            padded_content,
-            text="Contraseña",
-            text_color="#1a8341",
-            font=("Segoe UI", 16, "bold"),
-            anchor="w",
-        )
+        pass_label = ctk.CTkLabel(padded_content, text="Contraseña", text_color="#1a8341", font=("Segoe UI", 16, "bold"), anchor="w")
         pass_label.pack(pady=(0, 5), fill="x")
-        self.pass_entry = ctk.CTkEntry(
-            padded_content,
-            placeholder_text="Contraseña",
-            show="*",
-            height=50,
-            corner_radius=10,
-            width=300,
-            font=("Segoe UI", 16),
-        )
+        self.pass_entry = ctk.CTkEntry(padded_content, placeholder_text="Contraseña", show="*", height=50, corner_radius=10, width=300, font=("Segoe UI", 16))
         self.pass_entry.pack(pady=10, fill="x", expand=True)
 
-        # Botón Iniciar Sesión
-        login_btn = ctk.CTkButton(
-            padded_content,
-            text="Iniciar Sesión",
-            height=50,
-            corner_radius=10,
-            width=300,
-            command=self.login,
-            font=("Segoe UI", 16, "bold"),
-        )
+        login_btn = ctk.CTkButton(padded_content, text="Iniciar Sesión", height=50, corner_radius=10, width=300, command=self.login, font=("Segoe UI", 16, "bold"))
         login_btn.pack(pady=10, fill="x", expand=True)
 
-        # Botón Registrarse
-        register_btn = ctk.CTkButton(
-            padded_content,
-            text="Registrarse",
-            height=50,
-            corner_radius=10,
-            fg_color="gray",
-            hover_color="darkgray",
-            width=300,
-            command=self.register,
-            font=("Segoe UI", 16, "bold"),
-        )
+        register_btn = ctk.CTkButton(padded_content, text="Registrarse", height=50, corner_radius=10, fg_color="gray", hover_color="darkgray", width=300, font=("Segoe UI", 16, "bold"))
         register_btn.pack(pady=5, fill="x", expand=True)
 
-        # Botón Salir
-        exit_btn = ctk.CTkButton(
-            padded_content,
-            text="Salir",
-            height=50,
-            corner_radius=10,
-            fg_color="red",
-            hover_color="darkred",
-            width=300,
-            command=self.master.quit,
-            font=("Segoe UI", 16, "bold"),
-        )
+        exit_btn = ctk.CTkButton(padded_content, text="Salir", height=50, corner_radius=10, fg_color="red", hover_color="darkred", width=300, command=self.master.quit, font=("Segoe UI", 16, "bold"))
         exit_btn.pack(pady=5, fill="x", expand=True)
 
     def login(self):
         username = self.user_entry.get()
         password = self.pass_entry.get()
-
         user = authenticate(username, password)
+
         if user:
             print(f"✅ Usuario autenticado: {user.username} ({user.rol})")
             self.destroy()
 
-            if user.rol.value == "Cliente":
-                from views.product_catalog import ProductCatalogView
-                view = ProductCatalogView(master=self.master, usuario=user)
+            if user.rol == "Cliente":
+                view = ProductCatalogView(master=self.master, usuario=user, logout_callback=self.logout)
             else:
-                import customtkinter as ctk
-                view = ctk.CTkFrame(master=self.master)
-                ctk.CTkLabel(view, text="Vista de administrador en construcción.", font=("Arial", 20)).pack(padx=20, pady=20)
+                view = AdminMainApp(master=self.master, usuario=user, logout_callback=self.logout)
 
             view.pack(fill="both", expand=True)
         else:
             ctk.CTkLabel(self, text="❌ Credenciales inválidas", text_color="red", font=("Segoe UI", 14, "bold")).pack(pady=10)
+
+    def logout(self):
+        for widget in self.master.winfo_children():
+            widget.destroy()
+        LoginView(master=self.master).pack(fill="both", expand=True)

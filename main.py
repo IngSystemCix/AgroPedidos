@@ -63,18 +63,14 @@ class MainApp(tk.Tk):
             return
 
         if self.usuario.rol == "Administrador":
-            if view_name == "catalogo":
-                self.current_view = CatalogoAdminView(self, **common_args)
-            elif view_name == "gestion":
-                self.current_view = GestionProductosView(self, **common_args)
-            elif view_name == "inventario":
-                self.current_view = InventarioView(self, **common_args)
-            elif view_name == "ventas":
-                self.current_view = VentasView(self, **common_args)
-            elif view_name == "pedidos":
-                self.current_view = DetallePedidoView(self, **common_args)
-            else:
-                self.current_view = tk.Label(self, text="Vista no encontrada", font=("Arial", 18))
+            views = {
+                "catalogo": CatalogoAdminView,
+                "gestion": GestionProductosView,
+                "inventario": InventarioView,
+                "ventas": VentasView,
+                "pedidos": DetallePedidoView
+            }
+            self.current_view = views.get(view_name, lambda *a, **kw: tk.Label(self, text="Vista no encontrada", font=("Arial", 18)))(self, **common_args)
         else:
             self.current_view = ProductCatalogView(self, usuario=self.usuario, navigate=self.show_view)
 

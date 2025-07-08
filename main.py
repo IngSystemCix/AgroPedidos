@@ -1,12 +1,13 @@
 import tkinter as tk
 import customtkinter as ctk
+
 from views.login import LoginView
 from views.catalogo_admin_view import CatalogoAdminView
 from views.gestion_productos_view import GestionProductosView
 from views.inventario_view import InventarioView
 from views.ventas_view import VentasView
 from views.detalle_pedido_view import DetallePedidoView
-from views.product_catalog import ProductCatalogView
+from views.product_catalog import ProductCatalogView  # vista cliente modularizada
 
 class MainApp(tk.Tk):
     def __init__(self):
@@ -70,9 +71,16 @@ class MainApp(tk.Tk):
                 "ventas": VentasView,
                 "pedidos": DetallePedidoView
             }
-            self.current_view = views.get(view_name, lambda *a, **kw: tk.Label(self, text="Vista no encontrada", font=("Arial", 18)))(self, **common_args)
         else:
-            self.current_view = ProductCatalogView(self, usuario=self.usuario, navigate=self.show_view)
+            views = {
+                "catalogo": ProductCatalogView
+            }
+
+        view_class = views.get(view_name)
+        if view_class:
+            self.current_view = view_class(self, **common_args)
+        else:
+            self.current_view = tk.Label(self, text="Vista no encontrada", font=("Arial", 18))
 
         self.current_view.pack(fill="both", expand=True)
 

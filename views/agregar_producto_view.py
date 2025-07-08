@@ -30,7 +30,6 @@ class AgregarProductoView(ctk.CTkFrame):
         ]
 
         self.inputs = {}
-
         for label_text, widget_type in campos:
             ctk.CTkLabel(self, text=label_text).pack(anchor="w", padx=10, pady=(10, 0))
             widget = widget_type(self)
@@ -49,7 +48,7 @@ class AgregarProductoView(ctk.CTkFrame):
             text_color="black"
         ).pack(padx=10, pady=5, anchor="w")
 
-        # Botones
+        # Botón Guardar
         ctk.CTkButton(
             self,
             text="Guardar",
@@ -57,8 +56,9 @@ class AgregarProductoView(ctk.CTkFrame):
             fg_color="#1a8341",
             hover_color="#157d35",
             command=self.guardar_producto
-        ).pack(pady=20)
+        ).pack(pady=10)
 
+        # Botón Cancelar
         ctk.CTkButton(
             self,
             text="Cancelar",
@@ -66,7 +66,7 @@ class AgregarProductoView(ctk.CTkFrame):
             fg_color="#bbbbbb",
             hover_color="#999999",
             command=self.master.destroy
-        ).pack()
+        ).pack(pady=(0, 10))
 
     def seleccionar_imagen(self):
         file_path = filedialog.askopenfilename(
@@ -84,7 +84,7 @@ class AgregarProductoView(ctk.CTkFrame):
             price = float(self.inputs["Precio"].get())
             unit = self.inputs["Unidad de medida"].get()
             stock = int(self.inputs["Stock"].get())
-            image_url = self.image_path  # Usar ruta completa seleccionada
+            image_url = self.image_path
 
             if not name or not unit or not image_url:
                 messagebox.showwarning("Campos incompletos", "Completa todos los campos obligatorios.")

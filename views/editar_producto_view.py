@@ -1,13 +1,16 @@
 import customtkinter as ctk
-from tkinter import messagebox
+from tkinter import messagebox, filedialog
 from services.product_service import update_product, delete_product
+import os
+import shutil
 
 class EditarProductoView(ctk.CTkFrame):
     def __init__(self, master, producto, on_success=None):
         super().__init__(master)
         self.master = master
-        self.producto = producto  # objeto con atributos: id, name, price, unit, stock
+        self.producto = producto
         self.on_success = on_success
+        self.image_filename = producto.image_url if hasattr(producto, "image_url") else ""
         self.configure(fg_color="white")
         self.pack(fill="both", expand=True, padx=20, pady=20)
         self.create_widgets()
@@ -20,7 +23,6 @@ class EditarProductoView(ctk.CTkFrame):
             text_color="#1a8341"
         ).pack(pady=10)
 
-        # Campos del formulario
         self.entries = {}
 
         campos = [
@@ -37,7 +39,24 @@ class EditarProductoView(ctk.CTkFrame):
             entry.pack(fill="x", padx=10)
             self.entries[label] = entry
 
-        # Botones de acción
+        # Imagen
+        ctk.CTkLabel(self, text="Imagen").pack(anchor="w", padx=10, pady=(10, 0))
+        self.image_label = ctk.CTkLabel(
+            self,
+            text=self.image_filename if self.image_filename else "Ningún archivo seleccionado",
+            text_color="black" if self.image_filename else "gray"
+        )
+        self.image_label.pack(anchor="w", padx=10)
+
+        ctk.CTkButton(
+            self,
+            text="Seleccionar Imagen",
+            command=self.seleccionar_imagen,
+            fg_color="#dddddd",
+            text_color="black"
+        ).pack(padx=10, pady=5, anchor="w")
+
+        # Botones
         botones_frame = ctk.CTkFrame(self, fg_color="white")
         botones_frame.pack(pady=20)
 
@@ -65,14 +84,32 @@ class EditarProductoView(ctk.CTkFrame):
             command=self.master.destroy
         ).pack(pady=5)
 
+    def seleccionar_imagen(self):
+        file_path = filedialog.askopenfilename(
+            title="Selecciona una imagen",
+            filetypes=[("Archivos de imagen", "*.jpg *.jpeg *.png *.gif *.bmp")]
+        )
+        if file_path:
+            nombre_archivo = os.path.basename(file_path)
+            destino_dir = os.path.join("resources", "images")
+            os.makedirs(destino_dir, exist_ok=True)
+            destino_path = os.path.join(destino_dir, nombre_archivo)
+
+            if not os.path.exists(destino_path):
+                shutil.copy(file_path, destino_path)
+
+            self.image_filename = nombre_archivo
+            self.image_label.configure(text=nombre_archivo, text_color="black")
+
     def guardar_cambios(self):
         try:
             name = self.entries["Nombre"].get()
             price = float(self.entries["Precio"].get())
             unit = self.entries["Unidad de medida"].get()
             stock = int(self.entries["Stock"].get())
+            image_url = self.image_filename
 
-            update_product(self.producto.id, name, price, unit, stock)
+            update_product(self.producto.id, name, price, unit, stock, image_url)
 
             messagebox.showinfo("Éxito", "Producto actualizado correctamente.")
             if self.on_success:

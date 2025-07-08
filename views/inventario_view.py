@@ -7,6 +7,7 @@ from datetime import datetime
 from services.product_service import get_all_products
 from openpyxl.styles import PatternFill
 from openpyxl import load_workbook
+import xml.etree.ElementTree as ET
 
 class InventarioView(ctk.CTkFrame):
     def __init__(self, master, usuario, navigate):
@@ -61,8 +62,26 @@ class InventarioView(ctk.CTkFrame):
         self.search_entry.pack(side="right", padx=(0, 10))
         self.search_entry.bind("<KeyRelease>", lambda event: self.filtrar_tabla())
 
-        export_btn = ctk.CTkButton(top_frame, text="Exportar", width=120, command=self.exportar_excel)
-        export_btn.pack(side="right", padx=5)
+        # Botones azules con íconos
+        export_excel_btn = ctk.CTkButton(
+            top_frame,
+            text="📤 Exportar Excel",
+            width=160,
+            fg_color="#4a90e2",
+            hover_color="#357abd",
+            command=self.exportar_excel
+        )
+        export_excel_btn.pack(side="right", padx=5)
+
+        export_xml_btn = ctk.CTkButton(
+            top_frame,
+            text="🧾 Exportar XML",
+            width=160,
+            fg_color="#4a90e2",
+            hover_color="#357abd",
+            command=self.exportar_xml
+        )
+        export_xml_btn.pack(side="right", padx=5)
 
         # Tabla
         tabla_frame = ctk.CTkFrame(self, fg_color="white")
@@ -136,13 +155,43 @@ class InventarioView(ctk.CTkFrame):
                     cell.fill = PatternFill(start_color="D9EAD3", end_color="D9EAD3", fill_type="solid")
         wb.save(save_path)
 
-        # Modal de éxito
+        self.mostrar_popup("✅ Datos exportados correctamente")
+
+    def exportar_xml(self):
+        root = ET.Element("Inventario")
+
+        for p in self.productos:
+            valor_total = p.price * p.stock
+            if p.stock == 0:
+                estado = "Agotado"
+            elif p.stock < 50:
+                estado = "Bajo"
+            else:
+                estado = "Disponible"
+
+            producto_elem = ET.SubElement(root, "Producto", attrib={
+                "nombre": p.name,
+                "estado": estado
+            })
+            ET.SubElement(producto_elem, "Stock").text = str(p.stock)
+            ET.SubElement(producto_elem, "Precio").text = f"{p.price:.2f}"
+            ET.SubElement(producto_elem, "Valor").text = f"{valor_total:.2f}"
+
+        tree = ET.ElementTree(root)
+        fecha_actual = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        filename = f"inventario_exportado_{fecha_actual}.xml"
+        save_path = os.path.join("resources", filename)
+        tree.write(save_path, encoding="utf-8", xml_declaration=True)
+
+        self.mostrar_popup("✅ XML exportado correctamente")
+
+    def mostrar_popup(self, mensaje):
         confirm_popup = ctk.CTkToplevel(self)
         confirm_popup.title("Éxito")
         confirm_popup.geometry("300x150")
         confirm_popup.grab_set()
 
-        ctk.CTkLabel(confirm_popup, text="✅ Datos exportados correctamente", font=("Segoe UI", 14)).pack(pady=30)
+        ctk.CTkLabel(confirm_popup, text=mensaje, font=("Segoe UI", 14)).pack(pady=30)
         ctk.CTkButton(confirm_popup, text="OK", width=80, command=confirm_popup.destroy).pack()
 
     def navigate_logout(self):

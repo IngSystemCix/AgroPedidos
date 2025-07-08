@@ -1,19 +1,20 @@
 import customtkinter as ctk
-from tkinter import messagebox
+from tkinter import messagebox, filedialog
 from services.product_service import add_product
+import os
 
 class AgregarProductoView(ctk.CTkFrame):
     def __init__(self, master, usuario_id=4, on_success=None):
         super().__init__(master)
         self.master = master
-        self.usuario_id = usuario_id  # ID del usuario administrador
-        self.on_success = on_success  # callback para recargar tabla
+        self.usuario_id = usuario_id
+        self.on_success = on_success
+        self.image_path = ""  # Ruta de imagen seleccionada
         self.configure(fg_color="white")
         self.pack(fill="both", expand=True, padx=20, pady=20)
         self.create_widgets()
 
     def create_widgets(self):
-        # Título
         ctk.CTkLabel(
             self,
             text="Agregar Nuevo Producto",
@@ -21,13 +22,11 @@ class AgregarProductoView(ctk.CTkFrame):
             text_color="#1a8341"
         ).pack(pady=10)
 
-        # Entradas
         campos = [
             ("Nombre", ctk.CTkEntry),
             ("Precio", ctk.CTkEntry),
             ("Unidad de medida", ctk.CTkEntry),
-            ("Stock", ctk.CTkEntry),
-            ("Imagen (ej: tomate.jpg)", ctk.CTkEntry)
+            ("Stock", ctk.CTkEntry)
         ]
 
         self.inputs = {}
@@ -38,7 +37,19 @@ class AgregarProductoView(ctk.CTkFrame):
             widget.pack(fill="x", padx=10)
             self.inputs[label_text] = widget
 
-        # Botón Guardar
+        # Selector de imagen
+        ctk.CTkLabel(self, text="Imagen").pack(anchor="w", padx=10, pady=(10, 0))
+        self.image_label = ctk.CTkLabel(self, text="Ningún archivo seleccionado", text_color="gray")
+        self.image_label.pack(anchor="w", padx=10)
+        ctk.CTkButton(
+            self,
+            text="Seleccionar Imagen",
+            command=self.seleccionar_imagen,
+            fg_color="#dddddd",
+            text_color="black"
+        ).pack(padx=10, pady=5, anchor="w")
+
+        # Botones
         ctk.CTkButton(
             self,
             text="Guardar",
@@ -48,7 +59,6 @@ class AgregarProductoView(ctk.CTkFrame):
             command=self.guardar_producto
         ).pack(pady=20)
 
-        # Botón Cancelar
         ctk.CTkButton(
             self,
             text="Cancelar",
@@ -58,13 +68,23 @@ class AgregarProductoView(ctk.CTkFrame):
             command=self.master.destroy
         ).pack()
 
+    def seleccionar_imagen(self):
+        file_path = filedialog.askopenfilename(
+            title="Selecciona una imagen",
+            filetypes=[("Archivos de imagen", "*.jpg *.jpeg *.png *.gif *.bmp")]
+        )
+        if file_path:
+            self.image_path = file_path
+            file_name = os.path.basename(file_path)
+            self.image_label.configure(text=file_name, text_color="black")
+
     def guardar_producto(self):
         try:
             name = self.inputs["Nombre"].get()
             price = float(self.inputs["Precio"].get())
             unit = self.inputs["Unidad de medida"].get()
             stock = int(self.inputs["Stock"].get())
-            image_url = self.inputs["Imagen (ej: tomate.jpg)"].get()
+            image_url = self.image_path  # Usar ruta completa seleccionada
 
             if not name or not unit or not image_url:
                 messagebox.showwarning("Campos incompletos", "Completa todos los campos obligatorios.")
@@ -74,7 +94,7 @@ class AgregarProductoView(ctk.CTkFrame):
 
             messagebox.showinfo("Éxito", "Producto agregado correctamente.")
             if self.on_success:
-                self.on_success()  # Recarga tabla
+                self.on_success()
             self.master.destroy()
 
         except Exception as e:

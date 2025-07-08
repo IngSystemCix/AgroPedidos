@@ -77,7 +77,10 @@ class CatalogoAdminView(ctk.CTkFrame):
             self.create_product_card(product, row, col)
 
     def create_product_card(self, product, row, col):
-        card = ctk.CTkFrame(self.products_frame, corner_radius=12, fg_color="#ffffff", width=170, height=270)
+        card_width = 230
+        card_height = 280
+
+        card = ctk.CTkFrame(self.products_frame, corner_radius=12, fg_color="#ffffff", width=card_width, height=card_height)
         card.grid(row=row, column=col, padx=15, pady=15)
         card.grid_propagate(False)
 
@@ -85,18 +88,18 @@ class CatalogoAdminView(ctk.CTkFrame):
         if image:
             ctk.CTkLabel(card, image=image, text="").pack(pady=(10, 5))
         else:
-            ctk.CTkLabel(card, text="Sin imagen").pack()
+            ctk.CTkLabel(card, text="Sin imagen").pack(pady=(10, 5))
 
-        ctk.CTkLabel(card, text=product.name, font=("Segoe UI", 14, "bold"), text_color="#1a8341").pack()
-        ctk.CTkLabel(card, text=f"S/ {product.price:.2f}", font=("Segoe UI", 14)).pack()
-        ctk.CTkLabel(card, text=f"Stock: {product.stock}", font=("Arial", 12)).pack()
+        ctk.CTkLabel(card, text=product.name, font=("Segoe UI", 14, "bold"), text_color="#1a8341").pack(pady=2)
+        ctk.CTkLabel(card, text=f"S/ {product.price:.2f}", font=("Segoe UI", 14)).pack(pady=2)
+        ctk.CTkLabel(card, text=f"Stock: {product.stock}", font=("Arial", 12)).pack(pady=2)
 
     def get_product_image(self, product):
         try:
             path = os.path.join("resources", "images", product.image_url or "noimage.png")
             if os.path.exists(path):
                 img = Image.open(path)
-                return ctk.CTkImage(light_image=img, dark_image=img, size=(120, 120))
+                return ctk.CTkImage(light_image=img, dark_image=img, size=(140, 140))
         except:
             pass
         return None

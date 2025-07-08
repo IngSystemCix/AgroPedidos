@@ -1,4 +1,5 @@
 import customtkinter as ctk
+from tkinter import messagebox  # Para mostrar advertencias
 from services.product_service import get_all_products
 from views.header_user import HeaderUser
 from views.search_bar import SearchBar
@@ -20,7 +21,10 @@ class ProductCatalogView(ctk.CTkFrame):
         self.cart_button = None
         self.search_term = ""
 
+        self.product_cards = []  # Referencia a tarjetas de producto
+
         self.create_widgets()
+        self.start_stock_updater()
 
     def create_widgets(self):
         HeaderUser(self, self.usuario, self.navigate)
@@ -42,7 +46,6 @@ class ProductCatalogView(ctk.CTkFrame):
         self.canvas.bind("<Configure>", lambda e: self.canvas.itemconfig(self.products_window, width=e.width))
         self.products_frame.bind("<Configure>", lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
 
-        # Scroll solo cuando el mouse entra al canvas
         self.canvas.bind("<Enter>", lambda e: self.canvas.bind_all("<MouseWheel>", self._on_mousewheel))
         self.canvas.bind("<Leave>", lambda e: self.canvas.unbind_all("<MouseWheel>"))
 
@@ -58,25 +61,34 @@ class ProductCatalogView(ctk.CTkFrame):
     def load_products(self):
         for widget in self.products_frame.winfo_children():
             widget.destroy()
+        self.product_cards.clear()
 
         all_products = get_all_products()
         if self.search_term:
             all_products = [p for p in all_products if self.search_term in p.name.lower()]
 
-        columns = 5  # Fijo: 5 productos por fila
-
-        # Centrado de columnas
+        columns = 5
         for col in range(columns):
             self.products_frame.grid_columnconfigure(col, weight=1)
 
         for index, product in enumerate(all_products):
             row = index // columns
             col = index % columns
-            ProductCard(self.products_frame, product, row, col, self.agregar_al_carrito)
+            card = ProductCard(self.products_frame, product, row, col, self.agregar_al_carrito)
+            self.product_cards.append(card)
 
     def agregar_al_carrito(self, producto, cantidad):
+        # Validación de stock antes de agregar
+        if producto.stock < cantidad:
+            messagebox.showwarning("Stock insuficiente", f"No hay suficiente stock para {producto.name}.")
+            return
+
         for i, (p, c) in enumerate(self.carrito):
             if p.id == producto.id:
+                if c + cantidad > producto.stock:
+                    disponibles = producto.stock - c
+                    messagebox.showwarning("Stock insuficiente", f"Solo hay {disponibles} unidades adicionales disponibles de {producto.name}.")
+                    return
                 self.carrito[i] = (p, c + cantidad)
                 break
         else:
@@ -114,3 +126,16 @@ class ProductCatalogView(ctk.CTkFrame):
         if self.cart_button:
             self.cart_button.destroy()
             self.cart_button = None
+
+    def start_stock_updater(self):
+        self.update_stocks()
+        self.after(500, self.start_stock_updater)
+
+    def update_stocks(self):
+        updated_products = get_all_products()
+        product_dict = {p.id: p.stock for p in updated_products}
+
+        for card in self.product_cards:
+            new_stock = product_dict.get(card.product.id)
+            if new_stock is not None:
+                card.update_stock_display(new_stock)

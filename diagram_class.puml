@@ -1,0 +1,354 @@
+@startuml AgroPedidos_Class_Diagram
+
+' =======================
+' MODELOS DE DATOS
+' =======================
+
+class Usuario {
+    +id: Integer
+    +username: String(50)
+    +password: String(255)
+    +rol: String(20)
+    +__repr__(): String
+}
+
+class ProductModel {
+    +id: Integer
+    +usuario_id: Integer
+    +stock: Integer
+    +name: String(60)
+    +price: Numeric(10,2)
+    +unit: String(20)
+    +image_url: String(100)
+}
+
+class Order {
+    +id: Integer
+    +usuario_id: Integer
+    +created_at: DateTime
+    +total: Numeric(10,2)
+    +payment_method: PaymentMethodEnum
+}
+
+class OrderItem {
+    +id: Integer
+    +order_id: Integer
+    +product_id: Integer
+    +quantity: Integer
+    +subtotal: Numeric(10,2)
+}
+
+class Notification {
+    +id: Integer
+    +order_id: Integer
+    +message: Text
+    +status: NotificationStatusEnum
+    +sent_at: DateTime
+}
+
+' =======================
+' ENUMERACIONES
+' =======================
+
+enum PaymentMethodEnum {
+    D
+    Y
+}
+
+enum NotificationStatusEnum {
+    S
+    E
+    P
+}
+
+enum PaymentMethod {
+    D
+    Y
+}
+
+enum NotificationStatus {
+    S
+    E
+    P
+}
+
+' =======================
+' SERVICIOS
+' =======================
+
+class ProductService {
+    +id: Integer
+    +name: String
+    +price: Float
+    +unit: String
+    +stock: Integer
+    +image_url: String
+    +__init__(row)
+}
+
+' =======================
+' APLICACIÓN PRINCIPAL
+' =======================
+
+class MainApp {
+    +current_view: Object
+    +usuario: Usuario
+    +__init__()
+    +show_login(): void
+    +start_main_app(usuario): void
+    +create_menu(): void
+    +show_view(view_name): void
+    +clear_view(): void
+    +cerrar_sesion(): void
+}
+
+' =======================
+' VISTAS PRINCIPALES
+' =======================
+
+class LoginView {
+    +master: Object
+    +on_login_success: Function
+    +login_message: Object
+    +user_entry: CTkEntry
+    +pass_entry: CTkEntry
+    +__init__(master, on_login_success)
+    +create_widgets(): void
+    +login(): void
+    +open_register_view(): void
+}
+
+class RegisterView {
+    +master: Object
+    +username_entry: CTkEntry
+    +password_entry: CTkEntry
+    +confirm_entry: CTkEntry
+    +__init__(master)
+    +create_widgets(): void
+    +register_user(): void
+}
+
+class ProductCatalogView {
+    +master: Object
+    +usuario: Usuario
+    +navigate: Function
+    +carrito: List
+    +carrito_total: Float
+    +cart_button: Object
+    +search_term: String
+    +product_cards: List
+    +__init__(master, usuario, navigate)
+    +create_widgets(): void
+    +perform_search(): void
+    +load_products(): void
+    +agregar_al_carrito(producto, cantidad): void
+    +mostrar_boton_carrito(): void
+    +abrir_carrito(): void
+    +reset_carrito(): void
+    +start_stock_updater(): void
+    +update_stocks(): void
+}
+
+class CatalogoAdminView {
+    +master: Object
+    +usuario: Usuario
+    +navigate: Function
+    +canvas_frame: CTkFrame
+    +canvas: CTkCanvas
+    +products_frame: CTkFrame
+    +__init__(master, usuario, navigate)
+    +create_widgets(): void
+    +load_products(columns): void
+    +create_product_card(product, row, col): void
+    +get_product_image(product): CTkImage
+    +navigate_logout(): void
+}
+
+class GestionProductosView {
+    +master: Object
+    +usuario: Usuario
+    +navigate: Function
+    +tree: Treeview
+    +__init__(master, usuario, navigate)
+    +create_widgets(): void
+    +cargar_datos(): void
+    +manejar_click_accion(event): void
+    +abrir_modal_editar(producto): void
+    +eliminar_producto(producto): void
+    +abrir_ventana_agregar(): void
+    +recargar_productos(): void
+    +navigate_logout(): void
+}
+
+class InventarioView {
+    +master: Object
+    +usuario: Usuario
+    +navigate: Function
+    +search_entry: CTkEntry
+    +tree: Treeview
+    +productos: List
+    +__init__(master, usuario, navigate)
+    +create_widgets(): void
+    +cargar_datos(): void
+    +mostrar_productos(productos): void
+    +filtrar_tabla(): void
+    +exportar_excel(): void
+    +exportar_xml(): void
+    +mostrar_popup(mensaje): void
+    +navigate_logout(): void
+}
+
+class VentasView {
+    +master: Object
+    +usuario: Usuario
+    +navigate: Function
+    +btn_export_excel: CTkButton
+    +btn_export_xml: CTkButton
+    +tree: Treeview
+    +orders: List
+    +__init__(master, usuario, navigate)
+    +create_widgets(): void
+    +cargar_datos(): void
+    +mostrar_icono_accion(event): void
+    +exportar_excel(): void
+    +exportar_xml(): void
+    +navigate_logout(): void
+}
+
+class AgregarProductoView {
+    +master: Object
+    +usuario_id: Integer
+    +on_success: Function
+    +image_path: String
+    +inputs: Dict
+    +image_label: CTkLabel
+    +__init__(master, usuario_id, on_success)
+    +create_widgets(): void
+    +seleccionar_imagen(): void
+    +guardar_producto(): void
+}
+
+class EditarProductoView {
+    +master: Object
+    +producto: Object
+    +on_success: Function
+    +image_filename: String
+    +entries: Dict
+    +image_label: CTkLabel
+    +__init__(master, producto, on_success)
+    +create_widgets(): void
+    +seleccionar_imagen(): void
+    +guardar_cambios(): void
+    +eliminar_producto(): void
+}
+
+class DetallePedidoView {
+    +order_id: Integer
+    +order: Dict
+    +order_items: List
+    +tree: Treeview
+    +__init__(master, order_id)
+    +build_interface(): void
+}
+
+' =======================
+' COMPONENTES
+' =======================
+
+class ProductCard {
+    +product: Object
+    +card: CTkFrame
+    +stock_label: CTkLabel
+    +__init__(parent, product, row, col, add_to_cart_callback)
+    +reset_quantity(): void
+    +update_stock_display(new_stock): void
+}
+
+class SearchBar {
+    +search_entry: CTkEntry
+    +search_button: CTkButton
+    +__init__(master, search_callback)
+}
+
+class HeaderUser {
+    +__init__(master, usuario, navigate)
+}
+
+class CartModal {
+    +carrito: List
+    +total: Float
+    +reset_callback: Function
+    +usuario: Usuario
+    +total_var: StringVar
+    +metodo_pago: StringVar
+    +tarjeta_inputs: Dict
+    +yape_inputs: Dict
+    +stock_invalido: Boolean
+    +content_frame: CTkScrollableFrame
+    +lista_frame: CTkFrame
+    +pago_frame: CTkFrame
+    +btn_realizar: CTkButton
+    +__init__(master, carrito, total, reset_callback, usuario)
+    +render_ui(): void
+    +render_items(): void
+    +cambiar_cantidad(producto, delta): void
+    +obtener_stock_actual(product_id): Integer
+    +quitar_producto(producto): void
+    +actualizar_total(): void
+    +render_inputs(): void
+    +validar_datos(): Boolean
+    +validar_stock_carrito(): void
+    +realizar_pedido(): void
+    +guardar_pedido(): Boolean
+    +on_close(): void
+}
+
+' =======================
+' RELACIONES DE HERENCIA
+' =======================
+
+MainApp --|> "tk.Tk"
+LoginView --|> "ctk.CTkFrame"
+RegisterView --|> "ctk.CTkToplevel"
+ProductCatalogView --|> "ctk.CTkFrame"
+CatalogoAdminView --|> "ctk.CTkFrame"
+GestionProductosView --|> "ctk.CTkFrame"
+InventarioView --|> "ctk.CTkFrame"
+VentasView --|> "ctk.CTkFrame"
+AgregarProductoView --|> "ctk.CTkFrame"
+EditarProductoView --|> "ctk.CTkFrame"
+DetallePedidoView --|> "ctk.CTkToplevel"
+CartModal --|> "CTkToplevel"
+
+' =======================
+' RELACIONES DE COMPOSICIÓN Y ASOCIACIÓN
+' =======================
+
+Usuario ||--o{ ProductModel : "crea"
+Usuario ||--o{ Order : "realiza"
+Order ||--o{ OrderItem : "contiene"
+Order ||--o{ Notification : "genera"
+ProductModel ||--o{ OrderItem : "incluido_en"
+Order }o--|| PaymentMethodEnum : "usa"
+Notification }o--|| NotificationStatusEnum : "tiene"
+
+MainApp *-- LoginView : "contiene"
+MainApp *-- ProductCatalogView : "contiene"
+MainApp *-- CatalogoAdminView : "contiene"
+MainApp *-- GestionProductosView : "contiene"
+MainApp *-- InventarioView : "contiene"
+MainApp *-- VentasView : "contiene"
+
+ProductCatalogView *-- ProductCard : "contiene"
+ProductCatalogView *-- SearchBar : "contiene"
+ProductCatalogView *-- HeaderUser : "contiene"
+ProductCatalogView *-- CartModal : "abre"
+
+GestionProductosView *-- AgregarProductoView : "abre"
+GestionProductosView *-- EditarProductoView : "abre"
+
+VentasView *-- DetallePedidoView : "abre"
+
+LoginView *-- RegisterView : "abre"
+
+@enduml

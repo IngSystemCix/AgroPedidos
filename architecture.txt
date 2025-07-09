@@ -1,0 +1,246 @@
+========================================================================
+                    ANÁLISIS DE ARQUITECTURA DE SOFTWARE
+                            PROYECTO AGROPEDIDOS
+========================================================================
+
+📋 INFORMACIÓN GENERAL
+========================================================================
+Proyecto: AgroPedidos - Sistema de gestión de pedidos agrícolas
+Lenguaje: Python 3.x
+Framework UI: CustomTkinter (GUI Desktop)
+Base de Datos: MySQL con SQLAlchemy ORM
+Tipo de Aplicación: Aplicación de escritorio monolítica
+
+========================================================================
+🏗️ TIPO DE ARQUITECTURA GENERAL
+========================================================================
+
+ARQUITECTURA IDENTIFICADA: **ARQUITECTURA EN CAPAS (LAYERED ARCHITECTURE)**
+
+El proyecto implementa una arquitectura en capas claramente definida:
+
+1. **CAPA DE PRESENTACIÓN (Views)**
+   - Ubicación: /views/
+   - Responsabilidad: Interfaz de usuario, manejo de eventos GUI
+   - Archivos: login.py, product_catalog.py, cart_modal.py, etc.
+
+2. **CAPA DE SERVICIOS (Services)**
+   - Ubicación: /services/
+   - Responsabilidad: Lógica de negocio, validaciones, operaciones CRUD
+   - Archivos: auth_service.py, product_service.py, order_service.py
+
+3. **CAPA DE MODELOS (Models/Data)**
+   - Ubicación: /models/
+   - Responsabilidad: Entidades de dominio, mapeo ORM
+   - Archivos: usuario.py, product.py, order.py, order_item.py
+
+4. **CAPA DE CONFIGURACIÓN Y UTILIDADES**
+   - Ubicación: /config/, /utils/
+   - Responsabilidad: Configuración de BD, utilidades compartidas
+   - Archivos: connection.py, security.py
+
+CARACTERÍSTICAS DE LA ARQUITECTURA:
+✓ Separación clara de responsabilidades
+✓ Dependencias unidireccionales (Views → Services → Models)
+✓ Cohesión alta dentro de cada capa
+✓ Acoplamiento bajo entre capas
+✓ Facilita mantenimiento y testing
+
+========================================================================
+🎯 PATRONES DE DISEÑO IDENTIFICADOS
+========================================================================
+
+1. **PATRONES CREACIONALES**
+========================================================================
+
+**FACTORY METHOD (Implícito)**
+- Ubicación: services/product_service.py
+- Implementación: La clase Product actúa como factory para crear instancias
+- Código ejemplo:
+  ```python
+  class Product:
+      def __init__(self, row):
+          self.id, self.name, self.price, self.unit, self.stock, self.image_url = row
+  ```
+
+**BUILDER PATTERN (Parcial)**
+- Ubicación: views/cart_modal.py, views/agregar_producto_view.py
+- Implementación: Construcción paso a paso de interfaces complejas
+- Evidencia: Métodos como create_widgets(), render_ui(), render_inputs()
+
+2. **PATRONES ESTRUCTURALES**
+========================================================================
+
+**FACADE PATTERN**
+- Ubicación: services/auth_service.py, services/product_service.py
+- Implementación: Los servicios actúan como fachadas que simplifican
+  operaciones complejas de base de datos
+- Ejemplo:
+  ```python
+  def authenticate(username: str, password: str):
+      # Simplifica toda la lógica de autenticación
+  ```
+
+**COMPOSITE PATTERN**
+- Ubicación: Todas las vistas (views/)
+- Implementación: Las vistas contienen otros componentes (HeaderUser, SearchBar)
+- Evidencia: ProductCatalogView contiene HeaderUser, SearchBar, ProductCard
+
+**DECORATOR PATTERN (Técnico)**
+- Ubicación: models/ con SQLAlchemy decorators
+- Implementación: @property implícito, Column decorators
+- Evidencia: Uso de Column(), ForeignKey() como decoradores
+
+3. **PATRONES DE COMPORTAMIENTO**
+========================================================================
+
+**OBSERVER PATTERN**
+- Ubicación: views/product_catalog.py
+- Implementación: Sistema de actualización automática de stock
+- Código:
+  ```python
+  def start_stock_updater(self):
+      self.update_stocks()
+      self.after(500, self.start_stock_updater)  # Auto-observación
+  ```
+
+**COMMAND PATTERN**
+- Ubicación: Múltiples vistas con callbacks
+- Implementación: Encapsulación de acciones en funciones callback
+- Evidencia: add_to_cart_callback, on_success callbacks
+
+**STRATEGY PATTERN**
+- Ubicación: views/cart_modal.py
+- Implementación: Diferentes estrategias de pago (Tarjeta vs Yape)
+- Código:
+  ```python
+  if self.metodo_pago.get() == "Tarjeta":
+      # Estrategia de tarjeta
+  else:
+      # Estrategia de Yape
+  ```
+
+**STATE PATTERN (Implícito)**
+- Ubicación: main.py
+- Implementación: Cambio de vistas según estado del usuario
+- Evidencia: Diferentes interfaces para Admin vs Cliente
+
+**TEMPLATE METHOD PATTERN**
+- Ubicación: Todas las vistas que heredan de CTkFrame
+- Implementación: Estructura común con métodos específicos
+- Evidencia: __init__ → configure → create_widgets como template
+
+4. **PATRONES ARQUITECTÓNICOS ADICIONALES**
+========================================================================
+
+**REPOSITORY PATTERN (Simplificado)**
+- Ubicación: services/
+- Implementación: Abstracción del acceso a datos
+- Evidencia: get_all_products(), get_order_by_id()
+
+**DTO PATTERN (Data Transfer Objects)**
+- Ubicación: Comunicación entre capas
+- Implementación: Diccionarios como DTOs simples
+- Evidencia: order_service retorna diccionarios estructurados
+
+**DEPENDENCY INJECTION (Manual)**
+- Ubicación: views/ constructores
+- Implementación: Inyección de dependencias via constructores
+- Evidencia: navigate function, usuario object pasados como parámetros
+
+**MVC PATTERN (Variante)**
+- Modelo: /models/ (entidades de dominio)
+- Vista: /views/ (interfaces de usuario)
+- Controlador: /services/ + navegación en main.py
+
+========================================================================
+🔍 ANÁLISIS DE CALIDAD ARQUITECTÓNICA
+========================================================================
+
+**FORTALEZAS:**
+✓ Clara separación de responsabilidades
+✓ Código modular y organizado
+✓ Uso consistente de patrones
+✓ Fácil navegación y mantenimiento
+✓ Reutilización de componentes (HeaderUser, SearchBar)
+✓ Manejo adecuado de errores y validaciones
+
+**ÁREAS DE MEJORA:**
+⚠️ Acoplamiento directo a CustomTkinter (dificulta testing)
+⚠️ Lógica de negocio mezclada en algunas vistas
+⚠️ Configuración de BD hardcodeada
+⚠️ Ausencia de logging estructurado
+⚠️ Falta de interfaces/abstracciones explícitas
+
+**COMPLEJIDAD:**
+- Baja a Media
+- Estructura fácil de entender
+- Patrones bien implementados
+
+========================================================================
+📊 MÉTRICAS DE ARQUITECTURA
+========================================================================
+
+**DISTRIBUCIÓN DE ARCHIVOS POR CAPA:**
+- Views (Presentación): 15 archivos
+- Services (Negocio): 3 archivos  
+- Models (Datos): 6 archivos
+- Config/Utils: 2 archivos
+- Main Application: 1 archivo
+
+**ACOPLAMIENTO:**
+- Entre capas: BAJO ✓
+- Dentro de capas: MEDIO ✓
+- Con frameworks externos: ALTO ⚠️
+
+**COHESIÓN:**
+- Funcional: ALTA ✓
+- Responsabilidades: CLARA ✓
+
+========================================================================
+🚀 RECOMENDACIONES DE MEJORA
+========================================================================
+
+1. **ABSTRACCIÓN DE INTERFACES**
+   - Crear interfaces para servicios
+   - Implementar Repository pattern explícito
+   - Abstraer dependencias externas
+
+2. **GESTIÓN DE CONFIGURACIÓN**
+   - Externalizar configuración a archivos .env
+   - Implementar factory de configuración
+   - Usar variables de entorno
+
+3. **TESTING Y CALIDAD**
+   - Implementar unit tests por capa
+   - Usar mocks para dependencias externas
+   - Agregar integration tests
+
+4. **LOGGING Y MONITOREO**
+   - Implementar logging estructurado
+   - Agregar métricas de rendimiento
+   - Manejo centralizado de errores
+
+5. **SEGURIDAD**
+   - Validación de entrada más robusta
+   - Sanitización de datos
+   - Manejo seguro de credenciales
+
+========================================================================
+✅ CONCLUSIÓN
+========================================================================
+
+AgroPedidos implementa una **Arquitectura en Capas sólida y bien estructurada**
+con múltiples patrones de diseño aplicados correctamente. La aplicación muestra
+buenas prácticas de separación de responsabilidades y modularidad.
+
+**CALIFICACIÓN ARQUITECTÓNICA: 8.5/10**
+
+El proyecto demuestra un diseño maduro con clara separación de capas,
+uso consistente de patrones y código mantenible. Las áreas de mejora
+identificadas no comprometen la funcionalidad actual pero podrían
+beneficiar la escalabilidad futura.
+
+FECHA DE ANÁLISIS: Julio 9, 2025
+ANALISTA: Experto en Arquitectura de Software
+========================================================================

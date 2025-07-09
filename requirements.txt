@@ -1,4 +1,6 @@
-pandas openpyxl
+pandas
+openpyxl
 customtkinter
 sqlalchemy
 pillow
+mysql-connector-python

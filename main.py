@@ -34,7 +34,7 @@ class MainApp(tk.Tk):
         menu = tk.Menu(self)
         self.config(menu=menu)
 
-        if self.usuario.rol == "Administrador":
+        if self.usuario.rol == "Administrador": # type: ignore
             admin_menu = tk.Menu(menu, tearoff=0)
             menu.add_cascade(label="Administrador", menu=admin_menu)
             admin_menu.add_command(label="Catálogo", command=lambda: self.show_view("catalogo"))
@@ -63,7 +63,7 @@ class MainApp(tk.Tk):
             self.cerrar_sesion()
             return
 
-        if self.usuario.rol == "Administrador":
+        if self.usuario.rol == "Administrador": # type: ignore
             views = {
                 "catalogo": CatalogoAdminView,
                 "gestion": GestionProductosView,

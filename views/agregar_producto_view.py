@@ -1,7 +1,8 @@
 import customtkinter as ctk
 from tkinter import messagebox, filedialog
-from services.product_service import add_product
+from services.product_service import add_product, product_exists
 import os
+import shutil
 
 class AgregarProductoView(ctk.CTkFrame):
     def __init__(self, master, usuario_id=4, on_success=None):
@@ -80,15 +81,41 @@ class AgregarProductoView(ctk.CTkFrame):
 
     def guardar_producto(self):
         try:
-            name = self.inputs["Nombre"].get()
-            price = float(self.inputs["Precio"].get())
-            unit = self.inputs["Unidad de medida"].get()
-            stock = int(self.inputs["Stock"].get())
-            image_url = self.image_path
+            name = self.inputs["Nombre"].get().strip()
+            price_str = self.inputs["Precio"].get().strip()
+            unit = self.inputs["Unidad de medida"].get().strip()
+            stock_str = self.inputs["Stock"].get().strip()
 
-            if not name or not unit or not image_url:
+            # Validación de campos obligatorios
+            if not name or not unit or not self.image_path:
                 messagebox.showwarning("Campos incompletos", "Completa todos los campos obligatorios.")
                 return
+
+            # Validar si ya existe un producto con el mismo nombre
+            if product_exists(name):
+                messagebox.showerror("Duplicado", f"Ya existe un producto con el nombre '{name}'.")
+                return
+
+            # Conversión numérica
+            price = float(price_str)
+            stock = int(stock_str)
+
+            if price < 0:
+                messagebox.showerror("Valor inválido", "El precio no puede ser negativo.")
+                return
+            if stock < 0:
+                messagebox.showerror("Valor inválido", "El stock no puede ser negativo.")
+                return
+
+            # Copiar imagen
+            nombre_archivo = os.path.basename(self.image_path)
+            destino_dir = os.path.join("resources", "images")
+            os.makedirs(destino_dir, exist_ok=True)
+            destino_path = os.path.join(destino_dir, nombre_archivo)
+            if not os.path.exists(destino_path):
+                shutil.copy(self.image_path, destino_path)
+
+            image_url = nombre_archivo
 
             add_product(name, price, unit, stock, image_url, usuario_id=self.usuario_id)
 
@@ -97,5 +124,7 @@ class AgregarProductoView(ctk.CTkFrame):
                 self.on_success()
             self.master.destroy()
 
+        except ValueError:
+            messagebox.showerror("Error de formato", "El precio y el stock deben ser valores numéricos válidos.")
         except Exception as e:
             messagebox.showerror("Error", f"No se pudo guardar el producto:\n{e}")

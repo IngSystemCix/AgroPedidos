@@ -103,10 +103,28 @@ class EditarProductoView(ctk.CTkFrame):
 
     def guardar_cambios(self):
         try:
-            name = self.entries["Nombre"].get()
-            price = float(self.entries["Precio"].get())
-            unit = self.entries["Unidad de medida"].get()
-            stock = int(self.entries["Stock"].get())
+            name = self.entries["Nombre"].get().strip()
+            price_str = self.entries["Precio"].get().strip()
+            unit = self.entries["Unidad de medida"].get().strip()
+            stock_str = self.entries["Stock"].get().strip()
+
+            if not name:
+                messagebox.showerror("Campo obligatorio", "El nombre del producto no puede estar vacío.")
+                return
+            if not unit:
+                messagebox.showerror("Campo obligatorio", "La unidad de medida no puede estar vacía.")
+                return
+
+            price = float(price_str)
+            stock = int(stock_str)
+
+            if price < 0:
+                messagebox.showerror("Valor inválido", "El precio no puede ser negativo.")
+                return
+            if stock < 0:
+                messagebox.showerror("Valor inválido", "El stock no puede ser negativo.")
+                return
+
             image_url = self.image_filename
 
             update_product(self.producto.id, name, price, unit, stock, image_url)
@@ -116,6 +134,8 @@ class EditarProductoView(ctk.CTkFrame):
                 self.on_success()
             self.master.destroy()
 
+        except ValueError:
+            messagebox.showerror("Error de formato", "Verifica que el precio y el stock sean valores numéricos válidos.")
         except Exception as e:
             messagebox.showerror("Error", f"No se pudo actualizar el producto:\n{e}")
 

@@ -9,6 +9,7 @@ def get_all_products():
     cursor = conn.cursor()
     cursor.execute("SELECT id, name, price, unit, stock, image_url FROM Product")
     rows = cursor.fetchall()
+    cursor.close()
     conn.close()
     return [Product(row) for row in rows]
 
@@ -45,3 +46,13 @@ def delete_product(product_id):
     conn.commit()
     cursor.close()
     conn.close()
+
+def product_exists(name):
+    conn = get_connection()
+    cursor = conn.cursor()
+    sql = "SELECT COUNT(*) FROM Product WHERE LOWER(name) = LOWER(%s)"
+    cursor.execute(sql, (name,))
+    result = cursor.fetchone()[0]
+    cursor.close()
+    conn.close()
+    return result > 0

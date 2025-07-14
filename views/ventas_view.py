@@ -61,10 +61,11 @@ class VentasView(ctk.CTkFrame):
         export_frame = ctk.CTkFrame(contenido, fg_color="transparent")
         export_frame.pack(anchor="e", pady=5)
 
-        self.btn_export_excel = ctk.CTkButton(export_frame, text="Exportar Excel", command=self.exportar_excel)
+        self.btn_export_excel = ctk.CTkButton(export_frame, text="Exportar Excel", command=self.exportar_excel, fg_color="#4a90e2", hover_color="#357abd")
         self.btn_export_excel.pack(side="left", padx=5)
+        
 
-        self.btn_export_xml = ctk.CTkButton(export_frame, text="Exportar XML", command=self.exportar_xml)
+        self.btn_export_xml = ctk.CTkButton(export_frame, text="Exportar XML", command=self.exportar_xml, fg_color="#4a90e2", hover_color="#357abd")
         self.btn_export_xml.pack(side="left")
 
         # Tabla de ventas
@@ -112,7 +113,7 @@ class VentasView(ctk.CTkFrame):
                 os.makedirs(export_dir)
 
             df = pd.DataFrame(self.orders)
-            fecha_actual = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            fecha_actual = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
             filename = f"ventas_exportadas_{fecha_actual}.xlsx"
             save_path = os.path.join(export_dir, filename)
 
@@ -133,7 +134,7 @@ class VentasView(ctk.CTkFrame):
                 for key, value in o.items():
                     ET.SubElement(venta, key).text = str(value)
 
-            fecha_actual = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            fecha_actual = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
             filename = f"ventas_exportadas_{fecha_actual}.xml"
             save_path = os.path.join(export_dir, filename)
 

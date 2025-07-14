@@ -136,7 +136,7 @@ class InventarioView(ctk.CTkFrame):
             data.append([p.name, p.stock, p.price, valor_total, estado])
 
         df = pd.DataFrame(data, columns=["Producto", "Stock Actual", "Precio Unitario", "Valor Total", "Estado"])
-        fecha_actual = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        fecha_actual = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
         filename = f"inventario_exportado_{fecha_actual}.xlsx"
         save_path = os.path.join("resources", filename)
         df.to_excel(save_path, index=False)
@@ -178,7 +178,7 @@ class InventarioView(ctk.CTkFrame):
             ET.SubElement(producto_elem, "Valor").text = f"{valor_total:.2f}"
 
         tree = ET.ElementTree(root)
-        fecha_actual = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        fecha_actual = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
         filename = f"inventario_exportado_{fecha_actual}.xml"
         save_path = os.path.join("resources", filename)
         tree.write(save_path, encoding="utf-8", xml_declaration=True)

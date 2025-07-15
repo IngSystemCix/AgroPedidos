@@ -1,8 +1,9 @@
 import customtkinter as ctk
 from tkinter import messagebox, filedialog
-from services.product_service import update_product, delete_product
+from services.product_service import update_product, soft_delete_product
 import os
 import shutil
+from config.connection import get_connection
 
 class EditarProductoView(ctk.CTkFrame):
     def __init__(self, master, producto, on_success=None):
@@ -24,7 +25,6 @@ class EditarProductoView(ctk.CTkFrame):
         ).pack(pady=10)
 
         self.entries = {}
-
         campos = [
             ("Nombre", self.producto.name),
             ("Precio", str(self.producto.price)),
@@ -108,25 +108,18 @@ class EditarProductoView(ctk.CTkFrame):
             unit = self.entries["Unidad de medida"].get().strip()
             stock_str = self.entries["Stock"].get().strip()
 
-            if not name:
-                messagebox.showerror("Campo obligatorio", "El nombre del producto no puede estar vacío.")
-                return
-            if not unit:
-                messagebox.showerror("Campo obligatorio", "La unidad de medida no puede estar vacía.")
+            if not name or not unit:
+                messagebox.showerror("Campo obligatorio", "Nombre y unidad de medida no pueden estar vacíos.")
                 return
 
             price = float(price_str)
             stock = int(stock_str)
 
-            if price < 0:
-                messagebox.showerror("Valor inválido", "El precio no puede ser negativo.")
-                return
-            if stock < 0:
-                messagebox.showerror("Valor inválido", "El stock no puede ser negativo.")
+            if price < 0 or stock < 0:
+                messagebox.showerror("Valor inválido", "El precio y el stock no pueden ser negativos.")
                 return
 
             image_url = self.image_filename
-
             update_product(self.producto.id, name, price, unit, stock, image_url)
 
             messagebox.showinfo("Éxito", "Producto actualizado correctamente.")
@@ -135,7 +128,7 @@ class EditarProductoView(ctk.CTkFrame):
             self.master.destroy()
 
         except ValueError:
-            messagebox.showerror("Error de formato", "Verifica que el precio y el stock sean valores numéricos válidos.")
+            messagebox.showerror("Error de formato", "Verifica que el precio y el stock sean numéricos válidos.")
         except Exception as e:
             messagebox.showerror("Error", f"No se pudo actualizar el producto:\n{e}")
 
@@ -145,7 +138,11 @@ class EditarProductoView(ctk.CTkFrame):
             return
 
         try:
-            delete_product(self.producto.id)
+            if self.producto_tiene_historial_ventas():
+                messagebox.showerror("Error", "No se puede eliminar este producto porque tiene historial de ventas.")
+                return
+
+            soft_delete_product(self.producto.id)
             messagebox.showinfo("Eliminado", "Producto eliminado correctamente.")
             if self.on_success:
                 self.on_success()
@@ -153,3 +150,12 @@ class EditarProductoView(ctk.CTkFrame):
 
         except Exception as e:
             messagebox.showerror("Error", f"No se pudo eliminar el producto:\n{e}")
+
+    def producto_tiene_historial_ventas(self):
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM orderitem WHERE product_id = %s", (self.producto.id,))
+        count = cursor.fetchone()[0]
+        cursor.close()
+        conn.close()
+        return count > 0

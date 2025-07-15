@@ -1,7 +1,7 @@
 from tkinter import ttk, messagebox
 import customtkinter as ctk
 from PIL import Image
-from services.product_service import get_all_products, delete_product
+from services.product_service import get_all_products, soft_delete_product
 from views.agregar_producto_view import AgregarProductoView
 from views.editar_producto_view import EditarProductoView
 
@@ -16,7 +16,6 @@ class GestionProductosView(ctk.CTkFrame):
         self.create_widgets()
 
     def create_widgets(self):
-        # -------- HEADER --------
         header = ctk.CTkFrame(self, fg_color="#ffffff", height=80)
         header.pack(fill="x", side="top")
 
@@ -43,14 +42,12 @@ class GestionProductosView(ctk.CTkFrame):
             command=self.navigate_logout
         ).pack(side="left", padx=10)
 
-        # -------- NAVEGACIÓN --------
         nav_frame = ctk.CTkFrame(self, fg_color="#f3fdf2")
         nav_frame.pack(pady=(5, 0))
         secciones = [("Catálogo", "catalogo"), ("Gestión de Productos", "gestion"), ("Inventario", "inventario"), ("Ventas", "ventas")]
         for label, destino in secciones:
             ctk.CTkButton(nav_frame, text=label, width=150, command=lambda d=destino: self.navigate(d)).pack(side="left", padx=10)
 
-        # -------- BOTÓN AGREGAR --------
         agregar_frame = ctk.CTkFrame(self, fg_color="#f3fdf2")
         agregar_frame.pack(pady=10, fill="x")
 
@@ -65,7 +62,6 @@ class GestionProductosView(ctk.CTkFrame):
             command=self.abrir_ventana_agregar
         ).pack(side="right", padx=20)
 
-        # -------- TABLA --------
         tabla_frame = ctk.CTkFrame(self, fg_color="white")
         tabla_frame.pack(fill="both", expand=True, padx=20, pady=10)
 
@@ -120,9 +116,9 @@ class GestionProductosView(ctk.CTkFrame):
             messagebox.showerror("Error", "Producto no encontrado.")
             return
 
-        if col == "#6":  # Editar
+        if col == "#6":
             self.abrir_modal_editar(producto)
-        elif col == "#7":  # Eliminar
+        elif col == "#7":
             self.eliminar_producto(producto)
 
     def abrir_modal_editar(self, producto):
@@ -135,7 +131,7 @@ class GestionProductosView(ctk.CTkFrame):
         confirm = messagebox.askyesno("Eliminar", f"¿Estás seguro de eliminar '{producto.name}'?")
         if confirm:
             try:
-                delete_product(producto.id)
+                soft_delete_product(producto.id)  # Cambio aquí
                 messagebox.showinfo("Eliminado", "Producto eliminado correctamente.")
                 self.recargar_productos()
             except Exception as e:

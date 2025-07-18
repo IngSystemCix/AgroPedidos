@@ -1,7 +1,7 @@
 @startuml AgroPedidos_Class_Diagram
 
 ' =======================
-' MODELOS DE DATOS
+' MODELOS DE DATOS (SQLAlchemy)
 ' =======================
 
 class Usuario {
@@ -12,7 +12,7 @@ class Usuario {
     +__repr__(): String
 }
 
-class ProductModel {
+class Product {
     +id: Integer
     +usuario_id: Integer
     +stock: Integer
@@ -73,7 +73,7 @@ enum NotificationStatus {
 }
 
 ' =======================
-' SERVICIOS
+' SERVICIOS (Clases de Negocio)
 ' =======================
 
 class ProductService {
@@ -84,6 +84,35 @@ class ProductService {
     +stock: Integer
     +image_url: String
     +__init__(row)
+}
+
+class AuthService {
+    +get_usuario_by_username(db: Session, username: str): Usuario
+    +create_usuario(username: str, password: str, rol: str): Usuario
+    +authenticate(username: str, password: str): Usuario
+}
+
+class OrderService {
+    +get_all_orders_with_user(): List[Dict]
+    +get_order_by_id(order_id: int): Dict
+    +get_order_items_by_order_id(order_id: int): List[Dict]
+}
+
+' =======================
+' UTILIDADES
+' =======================
+
+class SecurityUtils {
+    +hash_password(password: str): str
+    +verify_password(password: str, hashed: str): bool
+}
+
+class ConnectionManager {
+    +DATABASE_URL: str
+    +engine: Engine
+    +SessionLocal: sessionmaker
+    +Base: declarative_base
+    +get_connection(): Connection
 }
 
 ' =======================
@@ -137,8 +166,13 @@ class ProductCatalogView {
     +cart_button: Object
     +search_term: String
     +product_cards: List
+    +canvas_frame: CTkFrame
+    +canvas: CTkCanvas
+    +products_frame: CTkFrame
+    +products_window: Object
     +__init__(master, usuario, navigate)
     +create_widgets(): void
+    +_on_mousewheel(event): void
     +perform_search(): void
     +load_products(): void
     +agregar_al_carrito(producto, cantidad): void
@@ -156,6 +190,7 @@ class CatalogoAdminView {
     +canvas_frame: CTkFrame
     +canvas: CTkCanvas
     +products_frame: CTkFrame
+    +products_window: Object
     +__init__(master, usuario, navigate)
     +create_widgets(): void
     +load_products(columns): void
@@ -240,9 +275,11 @@ class EditarProductoView {
     +seleccionar_imagen(): void
     +guardar_cambios(): void
     +eliminar_producto(): void
+    +producto_tiene_historial_ventas(): Boolean
 }
 
 class DetallePedidoView {
+    +master: Object
     +order_id: Integer
     +order: Dict
     +order_items: List
@@ -252,7 +289,7 @@ class DetallePedidoView {
 }
 
 ' =======================
-' COMPONENTES
+' COMPONENTES REUTILIZABLES
 ' =======================
 
 class ProductCard {
@@ -304,6 +341,30 @@ class CartModal {
 }
 
 ' =======================
+' FUNCIONES DE SERVICIO (Funciones Globales)
+' =======================
+
+note top of ProductService
+get_all_products(): List[Product]
+add_product(name, price, unit, stock, image_url, usuario_id): void
+update_product(product_id, name, price, unit, stock, image_url): void
+soft_delete_product(product_id): void
+product_exists(name): Boolean
+end note
+
+note top of AuthService
+get_usuario_by_username(db: Session, username: str): Usuario
+create_usuario(username: str, password: str, rol: str): Usuario
+authenticate(username: str, password: str): Usuario
+end note
+
+note top of OrderService
+get_all_orders_with_user(): List[Dict]
+get_order_by_id(order_id: int): Dict
+get_order_items_by_order_id(order_id: int): List[Dict]
+end note
+
+' =======================
 ' RELACIONES DE HERENCIA
 ' =======================
 
@@ -321,16 +382,20 @@ DetallePedidoView --|> "ctk.CTkToplevel"
 CartModal --|> "CTkToplevel"
 
 ' =======================
-' RELACIONES DE COMPOSICIÓN Y ASOCIACIÓN
+' RELACIONES DE MODELO DE DATOS
 ' =======================
 
-Usuario ||--o{ ProductModel : "crea"
+Usuario ||--o{ Product : "crea"
 Usuario ||--o{ Order : "realiza"
 Order ||--o{ OrderItem : "contiene"
 Order ||--o{ Notification : "genera"
-ProductModel ||--o{ OrderItem : "incluido_en"
+Product ||--o{ OrderItem : "incluido_en"
 Order }o--|| PaymentMethodEnum : "usa"
 Notification }o--|| NotificationStatusEnum : "tiene"
+
+' =======================
+' RELACIONES DE COMPOSICIÓN VISTA-COMPONENTE
+' =======================
 
 MainApp *-- LoginView : "contiene"
 MainApp *-- ProductCatalogView : "contiene"
@@ -344,11 +409,44 @@ ProductCatalogView *-- SearchBar : "contiene"
 ProductCatalogView *-- HeaderUser : "contiene"
 ProductCatalogView *-- CartModal : "abre"
 
+CatalogoAdminView *-- ProductCard : "contiene"
+
 GestionProductosView *-- AgregarProductoView : "abre"
 GestionProductosView *-- EditarProductoView : "abre"
 
 VentasView *-- DetallePedidoView : "abre"
 
 LoginView *-- RegisterView : "abre"
+
+' =======================
+' RELACIONES DE DEPENDENCIA (SERVICIOS)
+' =======================
+
+ProductCatalogView ..> ProductService : "usa"
+CatalogoAdminView ..> ProductService : "usa"
+GestionProductosView ..> ProductService : "usa"
+InventarioView ..> ProductService : "usa"
+VentasView ..> OrderService : "usa"
+DetallePedidoView ..> OrderService : "usa"
+LoginView ..> AuthService : "usa"
+RegisterView ..> AuthService : "usa"
+AgregarProductoView ..> ProductService : "usa"
+EditarProductoView ..> ProductService : "usa"
+CartModal ..> ProductService : "usa"
+
+AuthService ..> SecurityUtils : "usa"
+ProductService ..> ConnectionManager : "usa"
+OrderService ..> ConnectionManager : "usa"
+AuthService ..> ConnectionManager : "usa"
+
+' =======================
+' RELACIONES DE MODELO SQLAlchemy
+' =======================
+
+Usuario --|> "Base"
+Product --|> "Base"
+Order --|> "Base"
+OrderItem --|> "Base"
+Notification --|> "Base"
 
 @enduml

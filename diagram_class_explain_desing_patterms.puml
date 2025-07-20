@@ -1,0 +1,484 @@
+@startuml AgroPedidos_Design_Patterns_Diagram
+
+!define PATTERN_COLOR #FFE6CC
+!define FACTORY_COLOR #E6F3FF
+!define FACADE_COLOR #E6FFE6
+!define OBSERVER_COLOR #FFE6F3
+!define STRATEGY_COLOR #F3E6FF
+!define COMMAND_COLOR #FFFEE6
+!define TEMPLATE_COLOR #E6F0FF
+
+title "AgroPedidos - Diagrama de Clases con Patrones de Diseño"
+
+' =======================
+' MODELOS DE DATOS (SQLAlchemy)
+' =======================
+
+class Usuario {
+    +id: Integer
+    +username: String(50)
+    +password: String(255)
+    +rol: String(20)
+    +__repr__(): String
+}
+
+class Product {
+    +id: Integer
+    +usuario_id: Integer
+    +stock: Integer
+    +name: String(60)
+    +price: Numeric(10,2)
+    +unit: String(20)
+    +image_url: String(100)
+}
+
+class Order {
+    +id: Integer
+    +usuario_id: Integer
+    +created_at: DateTime
+    +total: Numeric(10,2)
+    +payment_method: PaymentMethodEnum
+}
+
+class OrderItem {
+    +id: Integer
+    +order_id: Integer
+    +product_id: Integer
+    +quantity: Integer
+    +subtotal: Numeric(10,2)
+}
+
+class Notification {
+    +id: Integer
+    +order_id: Integer
+    +message: Text
+    +status: NotificationStatusEnum
+    +sent_at: DateTime
+}
+
+' =======================
+' ENUMERACIONES
+' =======================
+
+enum PaymentMethodEnum {
+    D (Débito/Tarjeta)
+    Y (Yape)
+}
+
+enum NotificationStatusEnum {
+    S (Sent)
+    E (Error)
+    P (Pending)
+}
+
+' =======================
+' SERVICIOS (Clases de Negocio)
+' =======================
+
+class ProductService {
+    +id: Integer
+    +name: String
+    +price: Float
+    +unit: String
+    +stock: Integer
+    +image_url: String
+    +__init__(row)
+    +get_all_products(): List[Product]
+    +add_product(): void
+    +update_product(): void
+    +soft_delete_product(): void
+}
+
+class AuthService {
+    +get_usuario_by_username(db: Session, username: str): Usuario
+    +create_usuario(username: str, password: str, rol: str): Usuario
+    +authenticate(username: str, password: str): Usuario
+}
+
+class OrderService {
+    +get_all_orders_with_user(): List[Dict]
+    +get_order_by_id(order_id: int): Dict
+    +get_order_items_by_order_id(order_id: int): List[Dict]
+}
+
+' =======================
+' UTILIDADES
+' =======================
+
+class SecurityUtils {
+    +hash_password(password: str): str
+    +verify_password(password: str, hashed: str): bool
+}
+
+class ConnectionManager {
+    +DATABASE_URL: str
+    +engine: Engine
+    +SessionLocal: sessionmaker
+    +Base: declarative_base
+    +get_connection(): Connection
+}
+
+' =======================
+' APLICACIÓN PRINCIPAL
+' =======================
+
+class MainApp {
+    +current_view: Object
+    +usuario: Usuario
+    +__init__()
+    +show_login(): void
+    +start_main_app(usuario): void
+    +create_menu(): void
+    +show_view(view_name): void
+    +clear_view(): void
+    +cerrar_sesion(): void
+}
+
+' =======================
+' VISTAS PRINCIPALES
+' =======================
+
+class LoginView {
+    +master: Object
+    +on_login_success: Function
+    +login_message: Object
+    +user_entry: CTkEntry
+    +pass_entry: CTkEntry
+    +__init__(master, on_login_success)
+    +create_widgets(): void
+    +login(): void
+    +open_register_view(): void
+}
+
+class RegisterView {
+    +master: Object
+    +username_entry: CTkEntry
+    +password_entry: CTkEntry
+    +confirm_entry: CTkEntry
+    +__init__(master)
+    +create_widgets(): void
+    +register_user(): void
+}
+
+class ProductCatalogView {
+    +master: Object
+    +usuario: Usuario
+    +navigate: Function
+    +carrito: List
+    +carrito_total: Float
+    +cart_button: Object
+    +search_term: String
+    +product_cards: List
+    +canvas_frame: CTkFrame
+    +canvas: CTkCanvas
+    +products_frame: CTkFrame
+    +products_window: Object
+    +__init__(master, usuario, navigate)
+    +create_widgets(): void
+    +_on_mousewheel(event): void
+    +perform_search(): void
+    +load_products(): void
+    +agregar_al_carrito(producto, cantidad): void
+    +mostrar_boton_carrito(): void
+    +abrir_carrito(): void
+    +reset_carrito(): void
+    +start_stock_updater(): void
+    +update_stocks(): void
+}
+
+class CatalogoAdminView {
+    +master: Object
+    +usuario: Usuario
+    +navigate: Function
+    +canvas_frame: CTkFrame
+    +canvas: CTkCanvas
+    +products_frame: CTkFrame
+    +products_window: Object
+    +__init__(master, usuario, navigate)
+    +create_widgets(): void
+    +load_products(columns): void
+    +create_product_card(product, row, col): void
+    +get_product_image(product): CTkImage
+    +navigate_logout(): void
+}
+
+class GestionProductosView {
+    +master: Object
+    +usuario: Usuario
+    +navigate: Function
+    +tree: Treeview
+    +__init__(master, usuario, navigate)
+    +create_widgets(): void
+    +cargar_datos(): void
+    +manejar_click_accion(event): void
+    +abrir_modal_editar(producto): void
+    +eliminar_producto(producto): void
+    +abrir_ventana_agregar(): void
+    +recargar_productos(): void
+    +navigate_logout(): void
+}
+
+class InventarioView {
+    +master: Object
+    +usuario: Usuario
+    +navigate: Function
+    +search_entry: CTkEntry
+    +tree: Treeview
+    +productos: List
+    +__init__(master, usuario, navigate)
+    +create_widgets(): void
+    +cargar_datos(): void
+    +mostrar_productos(productos): void
+    +filtrar_tabla(): void
+    +exportar_excel(): void
+    +exportar_xml(): void
+    +mostrar_popup(mensaje): void
+    +navigate_logout(): void
+}
+
+class VentasView {
+    +master: Object
+    +usuario: Usuario
+    +navigate: Function
+    +btn_export_excel: CTkButton
+    +btn_export_xml: CTkButton
+    +tree: Treeview
+    +orders: List
+    +__init__(master, usuario, navigate)
+    +create_widgets(): void
+    +cargar_datos(): void
+    +mostrar_icono_accion(event): void
+    +exportar_excel(): void
+    +exportar_xml(): void
+    +navigate_logout(): void
+}
+
+class AgregarProductoView {
+    +master: Object
+    +usuario_id: Integer
+    +on_success: Function
+    +image_path: String
+    +inputs: Dict
+    +image_label: CTkLabel
+    +__init__(master, usuario_id, on_success)
+    +create_widgets(): void
+    +seleccionar_imagen(): void
+    +guardar_producto(): void
+}
+
+class EditarProductoView {
+    +master: Object
+    +producto: Object
+    +on_success: Function
+    +image_filename: String
+    +entries: Dict
+    +image_label: CTkLabel
+    +__init__(master, producto, on_success)
+    +create_widgets(): void
+    +seleccionar_imagen(): void
+    +guardar_cambios(): void
+    +eliminar_producto(): void
+    +producto_tiene_historial_ventas(): Boolean
+}
+
+class DetallePedidoView {
+    +master: Object
+    +order_id: Integer
+    +order: Dict
+    +order_items: List
+    +tree: Treeview
+    +__init__(master, order_id)
+    +build_interface(): void
+}
+
+' =======================
+' COMPONENTES REUTILIZABLES
+' =======================
+
+class ProductCard {
+    +product: Object
+    +card: CTkFrame
+    +stock_label: CTkLabel
+    +__init__(parent, product, row, col, add_to_cart_callback)
+    +reset_quantity(): void
+    +update_stock_display(new_stock): void
+}
+
+class SearchBar {
+    +search_entry: CTkEntry
+    +search_button: CTkButton
+    +__init__(master, search_callback)
+}
+
+class HeaderUser {
+    +__init__(master, usuario, navigate)
+}
+
+class CartModal {
+    +carrito: List
+    +total: Float
+    +reset_callback: Function
+    +usuario: Usuario
+    +total_var: StringVar
+    +metodo_pago: StringVar
+    +tarjeta_inputs: Dict
+    +yape_inputs: Dict
+    +stock_invalido: Boolean
+    +content_frame: CTkScrollableFrame
+    +lista_frame: CTkFrame
+    +pago_frame: CTkFrame
+    +btn_realizar: CTkButton
+    +__init__(master, carrito, total, reset_callback, usuario)
+    +render_ui(): void
+    +render_items(): void
+    +cambiar_cantidad(producto, delta): void
+    +obtener_stock_actual(product_id): Integer
+    +quitar_producto(producto): void
+    +actualizar_total(): void
+    +render_inputs(): void
+    +validar_datos(): Boolean
+    +validar_stock_carrito(): void
+    +realizar_pedido(): void
+    +guardar_pedido(): Boolean
+    +on_close(): void
+}
+
+' =======================
+' PATRONES DE DISEÑO - NOTAS EXPLICATIVAS
+' =======================
+
+note right of ProductService : <b><color:blue>FACTORY METHOD PATTERN</color></b>\nCrea instancias de Product desde tuplas\nde base de datos mediante constructor\nfactory: Product(row)\n\nEncapsula lógica de creación y\ngarantiza consistencia de objetos
+ProductService .[FACTORY_COLOR].> Product : <<Factory>>
+
+note top of AuthService : <b><color:green>FACADE PATTERN</color></b>\nSimplifica operaciones complejas de\nautenticación combinando:\n• Hash de password\n• Consulta a BD\n• Validación de credenciales\n• Gestión de sesión
+AuthService .[FACADE_COLOR].> SecurityUtils : <<Facade>>
+AuthService .[FACADE_COLOR].> ConnectionManager : <<Facade>>
+
+note top of OrderService : <b><color:green>FACADE PATTERN</color></b>\nSimplifica consultas complejas de\npedidos y agrupa operaciones\nrelacionadas con Orders y OrderItems
+OrderService .[FACADE_COLOR].> ConnectionManager : <<Facade>>
+
+note left of CartModal : <b><color:purple>STRATEGY PATTERN</color></b>\nImplementa diferentes estrategias\nde pago (Tarjeta vs Yape) con\nvalidaciones específicas para\ncada método de pago\n\nMétodos: render_inputs(), validar_datos()
+CartModal .[STRATEGY_COLOR].> PaymentMethodEnum : <<Strategy>>
+
+note right of ProductCatalogView : <b><color:pink>OBSERVER PATTERN</color></b>\nSistema de actualización automática\nde stock cada 500ms mediante:\n• start_stock_updater()\n• update_stocks()\n• Notifica a ProductCard observers
+ProductCatalogView .[OBSERVER_COLOR].> ProductCard : <<Observer>>
+
+note bottom of ConnectionManager : <b><color:orange>SINGLETON PATTERN</color></b>\n(Implícito)\nGestión centralizada de conexión\na base de datos y configuración\núnica del engine SQLAlchemy
+
+note left of MainApp : <b><color:red>STATE PATTERN</color></b>\n(Implícito)\nCambia comportamiento según\nrol del usuario:\n• Admin: CatalogoAdminView\n• Cliente: ProductCatalogView\n\nMétodo: show_view()
+MainApp .[#FF6B6B].> ProductCatalogView : <<Admin State>>
+MainApp .[#FF6B6B].> CatalogoAdminView : <<Client State>>
+
+note top of ProductCard : <b><color:yellow>COMMAND PATTERN</color></b>\nEncapsula acciones del usuario en\ncallbacks (add_to_cart_callback)\ndesacoplando invoker de receiver
+ProductCard .[COMMAND_COLOR].> ProductCatalogView : <<Command>>
+
+note bottom of LoginView : <b><color:lightblue>TEMPLATE METHOD PATTERN</color></b>\nTodas las vistas siguen el mismo patrón:\n__init__ → configure → create_widgets\n\nEstructura común con hooks específicos
+LoginView .[TEMPLATE_COLOR].> "CTkFrame" : <<Template>>
+RegisterView .[TEMPLATE_COLOR].> "CTkToplevel" : <<Template>>
+ProductCatalogView .[TEMPLATE_COLOR].> "CTkFrame" : <<Template>>
+
+note right of CartModal : <b><color:lightgreen>BUILDER PATTERN</color></b>\n(Parcial)\nConstrucción paso a paso de UI:\n• render_ui() → estructura\n• render_items() → elementos\n• render_inputs() → inputs específicos
+CartModal .[#90EE90].> CartModal : <<Builder Steps>>
+
+note left of AgregarProductoView : <b><color:lightgreen>BUILDER PATTERN</color></b>\n(Parcial)\nConstrucción paso a paso\nde formularios complejos:\ncreate_widgets() con múltiples pasos
+AgregarProductoView .[#90EE90].> AgregarProductoView : <<Builder Steps>>
+
+note bottom of ProductService : <b><color:cyan>REPOSITORY PATTERN</color></b>\n(Simplificado)\nAbstrae acceso a datos con métodos:\n• get_all_products()\n• add_product()\n• update_product()\n• soft_delete_product()
+
+note top of Usuario : <b><color:magenta>DECORATOR PATTERN</color></b>\n(Técnico SQLAlchemy)\nDecorators implícitos:\nColumn(), ForeignKey(), Enum()\nañaden funcionalidad ORM
+Usuario .[#FF69B4].> "Base" : <<ORM Decorator>>
+Product .[#FF69B4].> "Base" : <<ORM Decorator>>
+Order .[#FF69B4].> "Base" : <<ORM Decorator>>
+
+note right of GestionProductosView : <b><color:brown>COMPOSITE PATTERN</color></b>\nVistas contienen otros componentes\nde forma jerárquica:\n• HeaderUser\n• SearchBar\n• ProductCard\n• Modals
+GestionProductosView .[#A0522D].> AgregarProductoView : <<Composite>>
+GestionProductosView .[#A0522D].> EditarProductoView : <<Composite>>
+
+note bottom of MainApp : <b><color:navy>DEPENDENCY INJECTION</color></b>\n(Manual)\nInyección de dependencias via\nconstructores:\n• usuario object\n• navigate function\n• callback functions
+MainApp .[#000080]..> LoginView : <<DI: callback>>
+MainApp .[#000080]..> ProductCatalogView : <<DI: usuario, navigate>>
+
+' =======================
+' RELACIONES ORIGINALES DEL DIAGRAMA
+' =======================
+
+Usuario ||--o{ Product : "crea"
+Usuario ||--o{ Order : "realiza"
+Order ||--o{ OrderItem : "contiene"
+Order ||--o{ Notification : "genera"
+Product ||--o{ OrderItem : "incluido_en"
+
+MainApp --|> "tk.Tk"
+LoginView --|> "ctk.CTkFrame"
+RegisterView --|> "ctk.CTkToplevel"
+ProductCatalogView --|> "ctk.CTkFrame"
+CatalogoAdminView --|> "ctk.CTkFrame"
+GestionProductosView --|> "ctk.CTkFrame"
+InventarioView --|> "ctk.CTkFrame"
+VentasView --|> "ctk.CTkFrame"
+AgregarProductoView --|> "ctk.CTkFrame"
+EditarProductoView --|> "ctk.CTkFrame"
+DetallePedidoView --|> "ctk.CTkToplevel"
+CartModal --|> "CTkToplevel"
+
+MainApp *-- LoginView : "contiene"
+MainApp *-- ProductCatalogView : "contiene"
+MainApp *-- CatalogoAdminView : "contiene"
+MainApp *-- GestionProductosView : "contiene"
+MainApp *-- InventarioView : "contiene"
+MainApp *-- VentasView : "contiene"
+
+ProductCatalogView *-- ProductCard : "contiene"
+ProductCatalogView *-- SearchBar : "contiene"
+ProductCatalogView *-- HeaderUser : "contiene"
+ProductCatalogView *-- CartModal : "abre"
+
+CatalogoAdminView *-- ProductCard : "contiene"
+
+GestionProductosView *-- AgregarProductoView : "abre"
+GestionProductosView *-- EditarProductoView : "abre"
+
+VentasView *-- DetallePedidoView : "abre"
+
+LoginView *-- RegisterView : "abre"
+
+ProductCatalogView ..> ProductService : "usa"
+CatalogoAdminView ..> ProductService : "usa"
+GestionProductosView ..> ProductService : "usa"
+InventarioView ..> ProductService : "usa"
+VentasView ..> OrderService : "usa"
+DetallePedidoView ..> OrderService : "usa"
+LoginView ..> AuthService : "usa"
+RegisterView ..> AuthService : "usa"
+AgregarProductoView ..> ProductService : "usa"
+EditarProductoView ..> ProductService : "usa"
+CartModal ..> ProductService : "usa"
+
+Usuario --|> "Base"
+Product --|> "Base"
+Order --|> "Base"
+OrderItem --|> "Base"
+Notification --|> "Base"
+
+' =======================
+' LEYENDA DE PATRONES
+' =======================
+
+legend top left
+|<b>Patrones de Diseño Identificados</b>|
+|<color:blue>Factory Method</color>|Creación de objetos Product|
+|<color:green>Facade</color>|Simplificación de operaciones complejas|
+|<color:purple>Strategy</color>|Diferentes estrategias de pago|
+|<color:pink>Observer</color>|Actualización automática de stock|
+|<color:red>State</color>|Comportamiento según rol usuario|
+|<color:yellow>Command</color>|Encapsulación de acciones en callbacks|
+|<color:lightblue>Template Method</color>|Estructura común de vistas|
+|<color:lightgreen>Builder</color>|Construcción paso a paso de UI|
+|<color:cyan>Repository</color>|Abstracción de acceso a datos|
+|<color:magenta>Decorator</color>|SQLAlchemy ORM decorators|
+|<color:brown>Composite</color>|Composición jerárquica de vistas|
+|<color:navy>Dependency Injection</color>|Inyección manual de dependencias|
+|<color:orange>Singleton</color>|Gestión única de conexión BD|
+endlegend
+
+@enduml

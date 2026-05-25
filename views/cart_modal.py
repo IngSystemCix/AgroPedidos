@@ -1,7 +1,7 @@
 from customtkinter import *
 from datetime import datetime
 from tkinter import messagebox
-import mysql.connector
+from config.connection import get_connection
 
 class CartModal(CTkToplevel):
     def __init__(self, master, carrito, total, reset_callback, usuario):
@@ -91,19 +91,23 @@ class CartModal(CTkToplevel):
 
     def obtener_stock_actual(self, product_id):
         try:
-            conn = mysql.connector.connect(
-                host="localhost",
-                user="root",
-                password="123456",
-                database="agropedidos_db"
-            )
+            conn = get_connection()
             cursor = conn.cursor()
-            cursor.execute("SELECT stock FROM product WHERE id = %s", (product_id,))
-            stock = cursor.fetchone()[0]
+
+            cursor.execute(
+                "SELECT stock FROM product WHERE id = %s",
+                (product_id,)
+            )
+
+            row = cursor.fetchone()
+
             cursor.close()
             conn.close()
-            return stock
-        except:
+
+            return row[0] if row else 0
+
+        except Exception as e:
+            print(f"Error obteniendo stock: {e}")
             return 0
 
     def quitar_producto(self, producto):
@@ -169,12 +173,7 @@ class CartModal(CTkToplevel):
 
     def validar_stock_carrito(self):
         try:
-            conn = mysql.connector.connect(
-                host="localhost",
-                user="root",
-                password="123456",
-                database="agropedidos_db"
-            )
+            conn = get_connection()
             cursor = conn.cursor()
             self.stock_invalido = False
 
@@ -214,12 +213,7 @@ class CartModal(CTkToplevel):
 
     def guardar_pedido(self):
         try:
-            conn = mysql.connector.connect(
-                host="localhost",
-                user="root",
-                password="123456",
-                database="agropedidos_db"
-            )
+            conn = get_connection()
             cursor = conn.cursor()
 
             cursor.execute("INSERT INTO `order` (usuario_id, created_at, total, payment_method) VALUES (%s, %s, %s, %s)",

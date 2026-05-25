@@ -7,7 +7,7 @@ from views.gestion_productos_view import GestionProductosView
 from views.inventario_view import InventarioView
 from views.ventas_view import VentasView
 from views.detalle_pedido_view import DetallePedidoView
-from views.product_catalog import ProductCatalogView  # vista cliente modularizada
+from views.product_catalog import ProductCatalogView 
 
 class MainApp(tk.Tk):
     def __init__(self):

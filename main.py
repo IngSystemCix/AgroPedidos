@@ -7,51 +7,134 @@ from views.gestion_productos_view import GestionProductosView
 from views.inventario_view import InventarioView
 from views.ventas_view import VentasView
 from views.detalle_pedido_view import DetallePedidoView
-from views.product_catalog import ProductCatalogView 
+from views.product_catalog import ProductCatalogView
 
-class MainApp(tk.Tk):
+
+class MainApp(ctk.CTk):
+
     def __init__(self):
         super().__init__()
+
         self.title("AgroPedidos")
         self.geometry("1280x720")
+        self.minsize(1100, 650)
+
         self.current_view = None
         self.usuario = None
 
+        self.protocol("WM_DELETE_WINDOW", self.on_close)
+
         self.show_login()
 
+    # =========================
+    # LOGIN
+    # =========================
+
     def show_login(self):
+
         self.clear_view()
-        login_view = LoginView(master=self, on_login_success=self.start_main_app)
+
+        login_view = LoginView(
+            master=self,
+            on_login_success=self.start_main_app
+        )
+
         login_view.pack(fill="both", expand=True)
 
+        self.current_view = login_view
+
+    # =========================
+    # START APP
+    # =========================
+
     def start_main_app(self, usuario):
+
         self.usuario = usuario
+
         self.clear_view()
+
         self.create_menu()
+
         self.show_view("catalogo")
 
+    # =========================
+    # MENU
+    # =========================
+
     def create_menu(self):
+
         menu = tk.Menu(self)
+
         self.config(menu=menu)
 
-        if self.usuario.rol == "Administrador": # type: ignore
+        if self.usuario and self.usuario.rol == "Administrador":
+
             admin_menu = tk.Menu(menu, tearoff=0)
-            menu.add_cascade(label="Administrador", menu=admin_menu)
-            admin_menu.add_command(label="Catálogo", command=lambda: self.show_view("catalogo"))
-            admin_menu.add_command(label="Gestión de Productos", command=lambda: self.show_view("gestion"))
-            admin_menu.add_command(label="Inventario", command=lambda: self.show_view("inventario"))
-            admin_menu.add_command(label="Ventas", command=lambda: self.show_view("ventas"))
-            admin_menu.add_command(label="Pedidos", command=lambda: self.show_view("pedidos"))
+
+            menu.add_cascade(
+                label="Administrador",
+                menu=admin_menu
+            )
+
+            admin_menu.add_command(
+                label="Catálogo",
+                command=lambda: self.show_view("catalogo")
+            )
+
+            admin_menu.add_command(
+                label="Gestión de Productos",
+                command=lambda: self.show_view("gestion")
+            )
+
+            admin_menu.add_command(
+                label="Inventario",
+                command=lambda: self.show_view("inventario")
+            )
+
+            admin_menu.add_command(
+                label="Ventas",
+                command=lambda: self.show_view("ventas")
+            )
+
+            admin_menu.add_command(
+                label="Pedidos",
+                command=lambda: self.show_view("pedidos")
+            )
+
             admin_menu.add_separator()
-            admin_menu.add_command(label="Cerrar sesión", command=self.cerrar_sesion)
+
+            admin_menu.add_command(
+                label="Cerrar sesión",
+                command=self.cerrar_sesion
+            )
+
         else:
+
             cliente_menu = tk.Menu(menu, tearoff=0)
-            menu.add_cascade(label="Cliente", menu=cliente_menu)
-            cliente_menu.add_command(label="Catálogo", command=lambda: self.show_view("catalogo"))
+
+            menu.add_cascade(
+                label="Cliente",
+                menu=cliente_menu
+            )
+
+            cliente_menu.add_command(
+                label="Catálogo",
+                command=lambda: self.show_view("catalogo")
+            )
+
             cliente_menu.add_separator()
-            cliente_menu.add_command(label="Cerrar sesión", command=self.cerrar_sesion)
+
+            cliente_menu.add_command(
+                label="Cerrar sesión",
+                command=self.cerrar_sesion
+            )
+
+    # =========================
+    # VISTAS
+    # =========================
 
     def show_view(self, view_name):
+
         self.clear_view()
 
         common_args = {
@@ -63,7 +146,8 @@ class MainApp(tk.Tk):
             self.cerrar_sesion()
             return
 
-        if self.usuario.rol == "Administrador": # type: ignore
+        if self.usuario and self.usuario.rol == "Administrador":
+
             views = {
                 "catalogo": CatalogoAdminView,
                 "gestion": GestionProductosView,
@@ -71,31 +155,87 @@ class MainApp(tk.Tk):
                 "ventas": VentasView,
                 "pedidos": DetallePedidoView
             }
+
         else:
+
             views = {
                 "catalogo": ProductCatalogView
             }
 
         view_class = views.get(view_name)
-        if view_class:
-            self.current_view = view_class(self, **common_args)
-        else:
-            self.current_view = tk.Label(self, text="Vista no encontrada", font=("Arial", 18))
 
-        self.current_view.pack(fill="both", expand=True)
+        if view_class:
+
+            self.current_view = view_class(
+                self,
+                **common_args
+            )
+
+        else:
+
+            self.current_view = ctk.CTkLabel(
+                self,
+                text="Vista no encontrada",
+                font=("Arial", 18)
+            )
+
+        self.current_view.pack(
+            fill="both",
+            expand=True
+        )
+
+    # =========================
+    # LIMPIAR VISTA
+    # =========================
 
     def clear_view(self):
+
         if self.current_view:
-            self.current_view.destroy()
+
+            try:
+                self.current_view.destroy()
+            except:
+                pass
+
             self.current_view = None
 
+    # =========================
+    # LOGOUT
+    # =========================
+
     def cerrar_sesion(self):
+
         self.usuario = None
+
         self.clear_view()
+
         self.show_login()
 
+    # =========================
+    # CLOSE APP
+    # =========================
+
+    def on_close(self):
+
+        self.destroy()
+
+
+# =========================
+# MAIN
+# =========================
+
 if __name__ == "__main__":
+
+    # IMPORTANTE:
+    # evita glitches visuales y transparencias
+    # en Python 3.12 + CustomTkinter
+
+    ctk.deactivate_automatic_dpi_awareness()
+
     ctk.set_appearance_mode("light")
+
     ctk.set_default_color_theme("green")
+
     app = MainApp()
+
     app.mainloop()

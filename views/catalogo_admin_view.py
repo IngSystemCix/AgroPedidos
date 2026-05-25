@@ -10,7 +10,6 @@ class CatalogoAdminView(ctk.CTkFrame):
         self.usuario = usuario
         self.navigate = navigate
         self.configure(fg_color="#f3fdf2")
-        self.pack(fill="both", expand=True)
         self.create_widgets()
 
     def create_widgets(self):
@@ -58,8 +57,7 @@ class CatalogoAdminView(ctk.CTkFrame):
 
         self.products_frame.bind("<Configure>", lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
         self.canvas.bind("<Configure>", lambda e: self.canvas.itemconfig(self.products_window, width=e.width))
-        self.canvas.bind_all("<MouseWheel>", lambda event: self.canvas.yview_scroll(-int(event.delta / 120), "units"))
-
+        self.canvas.bind("<MouseWheel>",lambda event: self.canvas.yview_scroll(-int(event.delta / 120),"units"))
         self.load_products()
 
     def load_products(self, columns=5):
@@ -86,7 +84,9 @@ class CatalogoAdminView(ctk.CTkFrame):
 
         image = self.get_product_image(product)
         if image:
-            ctk.CTkLabel(card, image=image, text="").pack(pady=(10, 5))
+            img_label = ctk.CTkLabel(card, image=image, text="")
+            img_label.image = image
+            img_label.pack(pady=(10, 5))
         else:
             ctk.CTkLabel(card, text="Sin imagen").pack(pady=(10, 5))
 

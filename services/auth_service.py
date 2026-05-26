@@ -4,8 +4,8 @@ from models.usuario import Usuario
 from utils.security import hash_password, verify_password
 
 # Obtener usuario por nombre
-def get_usuario_by_username(db: Session, username: str):
-    return db.query(Usuario).filter(Usuario.username == username).first()
+# def get_usuario_by_username(db: Session, username: str):
+#     return db.query(Usuario).filter(Usuario.username == username).first()
 
 # Crear nuevo usuario (por defecto con rol Cliente)
 def create_usuario(username: str, password: str, rol: str = "Cliente"):
